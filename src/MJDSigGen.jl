@@ -20,6 +20,7 @@ end
 
 include("types.jl")
 include("util.jl")
+include("wrappers.jl")
 
 
 end # module
