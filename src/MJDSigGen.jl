@@ -13,6 +13,11 @@ else
 end
 
 
+macro sgsym(func)
+    :(($(esc(func)), libmjd_siggen))
+end
+
+
 include("types.jl")
 
 
