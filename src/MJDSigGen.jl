@@ -2,7 +2,7 @@
 
 module MJDSigGen
 
-__precompile__(false)
+__precompile__(true)
 
 
 const deps_jl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
