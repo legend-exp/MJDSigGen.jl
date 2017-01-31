@@ -17,11 +17,8 @@ add_library (mjd_siggen SHARED calc_signal.c cyl_point.c detector_geometry.c fie
 add_executable (mjd_fieldgen mjd_fieldgen.c)
 target_link_libraries (mjd_fieldgen LINK_PUBLIC mjd_siggen)
 
-add_executable (mjd_stester signal_tester.c)
-target_link_libraries (mjd_stester LINK_PUBLIC mjd_siggen)
-
-target_link_libraries (mjd_siggen -lm -lreadline)
+target_link_libraries (mjd_siggen -lm)
 
 install (TARGETS mjd_siggen DESTINATION lib)
-install (TARGETS mjd_fieldgen mjd_stester DESTINATION bin)
+install (TARGETS mjd_fieldgen DESTINATION bin)
 install (FILES calc_signal.h cyl_point.h detector_geometry.h fields.h mjd_siggen.h point.h DESTINATION include)
