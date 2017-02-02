@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 #include "mjd_siggen.h"
 
 int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
@@ -73,6 +74,10 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
     printf("\nERROR: config file %s does not exist?\n", config_file_name);
     return 1;
   }
+
+  /* store config file name */
+  strncpy(setup->config_name, config_file_name, 256);
+
   /* read config file */
   printf("\nReading values from config file %s\n", config_file_name);
   while (fgets(line, sizeof(line), file)) {
@@ -273,4 +278,39 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
   }
 
   return 0;
+}
+
+
+char* resolve_path_rel_to(const char* path, const char* ref_filename){
+  const char slash = '/';
+  const size_t max_input_str_len = 255;
+  char *result = 0;
+
+  size_t ref_len = strnlen(ref_filename, max_input_str_len);
+  size_t path_len = strnlen(path, max_input_str_len);
+
+  if ((ref_len >= 1) && (path[0] != slash)){
+    if (ref_filename[ref_len - 1] == slash) --ref_len;
+    size_t i = ref_len;
+    do{
+      if (ref_filename[i - 1] == slash) break;
+      --i;
+    } while (i != 0);
+    if (i != 0){
+      result = (char *) calloc(i + path_len + 1, sizeof(char));
+      memcpy(result, ref_filename, i);
+      memcpy(result + i, path, path_len + 1);
+      assert(result[i + path_len] == 0);
+      assert(strlen(result) == path_len + i);
+    }
+  }
+
+  if (result ==  0){
+    result = (char *) calloc(path_len + 1, sizeof(char));
+    memcpy(result, path, path_len + 1);
+    assert(result[path_len] == 0);
+    assert(strlen(result) == path_len);
+  }
+
+  return result;
 }

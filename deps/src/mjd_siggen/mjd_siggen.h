@@ -94,6 +94,7 @@ typedef struct {
   int   bulletize_PC;         // set to 1 for inside of point contact hemispherical, 0 for cylindrical
 
   // file names
+  char config_name[256];      // config file setup was loaded from
   char drift_name[256];       // drift velocity lookup table
   char field_name[256];       // potential/efield file name
   char wp_name[256];          // weighting potential file name
@@ -132,5 +133,7 @@ typedef struct {
 
 
 int read_config(char *config_file_name, MJD_Siggen_Setup *setup);
+
+char* resolve_path_rel_to(const char* path, const char* ref_filename);
 
 #endif /*#ifndef _MJD_SIGGEN_H */

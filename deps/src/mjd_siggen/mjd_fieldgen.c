@@ -691,12 +691,14 @@ int main(int argc, char **argv)
       }
     }
     // write potential and field to output file
-    if (!(file = fopen(setup.field_name, "w"))) {
-      printf("ERROR: Cannot open file %s for electric field...\n", setup.field_name);
+    char *field_file_name = resolve_path_rel_to(setup.field_name, setup.config_name);
+    if (!(file = fopen(field_file_name, "w"))) {
+      printf("ERROR: Cannot open file %s for electric field...\n", field_file_name);
       return 1;
     } else {
-      printf("Writing electric field data to file %s\n", setup.field_name);
+      printf("Writing electric field data to file %s\n", field_file_name);
     }
+    free(field_file_name); field_file_name = 0;
     /* copy configuration parameters to output file */
     report_config(file, config_file_name);
     fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", BV);
@@ -1121,12 +1123,14 @@ int main(int argc, char **argv)
 
   if (WP == 1) {
     // write WP values to output file
-    if (!(file = fopen(setup.wp_name, "w"))) {
-      printf("ERROR: Cannot open file %s for weighting potential...\n", setup.wp_name);
+    char *wp_file_name = resolve_path_rel_to(setup.wp_name, setup.config_name);
+    if (!(file = fopen(wp_file_name, "w"))) {
+      printf("ERROR: Cannot open file %s for weighting potential...\n", wp_file_name);
       return 1;
     } else {
-      printf("Writing weighting potential to file %s\n", setup.wp_name);
+      printf("Writing weighting potential to file %s\n", wp_file_name);
     }
+    free(wp_file_name); wp_file_name = 0;
     /* copy configuration parameters to output file */
     report_config(file, config_file_name);
     fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", BV);

@@ -53,18 +53,18 @@ int field_setup(MJD_Siggen_Setup *setup){
 	      setup->xtal_temp);
 
   if (setup_velo(setup) != 0){
-    error("Failed to read drift velocity data from file: %s\n", 
-	  setup->drift_name);
+    error("Failed to read drift velocity data, config file: %s\n",
+	  setup->config_name);
     return -1;
   }
   if (setup_efield(setup) != 0){
-    error("Failed to read electric field data from file: %s\n", 
-	  setup->field_name);
+    error("Failed to read electric field data, config file: %s\n",
+	  setup->config_name);
     return -1;
   }
   if (setup_wp(setup) != 0){
-    error("Failed to read weighting potential from file %s\n",
-	  setup->wp_name);
+    error("Failed to read weighting potential, config file: %s\n",
+	  setup->config_name);
     return -1;
   }
 
@@ -317,10 +317,12 @@ static int setup_velo(MJD_Siggen_Setup *setup){
       return -1;
     }
   }
-  if ((fp = fopen(setup->drift_name, "r")) == NULL){
-    error("failed to open velocity lookup table file: '%s'\n", setup->drift_name);
+  char *drift_file_name = resolve_path_rel_to(setup->drift_name, setup->config_name);
+  if ((fp = fopen(drift_file_name, "r")) == NULL){
+    error("failed to open velocity lookup table file: '%s'\n", drift_file_name);
     return -1;
   }
+  free(drift_file_name); drift_file_name = 0;
   line[0] = '#';
   c = line;
   while ((line[0] == '#' || line[0] == '\0') && c != NULL) c = fgets(line, MAX_LINE, fp);
@@ -492,10 +494,12 @@ static int setup_efield(MJD_Siggen_Setup *setup){
   float  v, eabs, er, ez;
   cyl_pt cyl, **efld;
 
-  if ((fp = fopen(setup->field_name, "r")) == NULL){
-    error("failed to open electric field table: %s\n", setup->field_name);
+  char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_name);
+  if ((fp = fopen(field_file_name, "r")) == NULL){
+    error("failed to open electric field table: %s\n", field_file_name);
     return 1;
   }
+  free(field_file_name); field_file_name = 0;
   
   setup->rlen = lrintf((setup->rmax - setup->rmin)/setup->rstep) + 1;
   setup->zlen = lrintf((setup->zmax - setup->zmin)/setup->zstep) + 1;
@@ -579,10 +583,12 @@ static int setup_wp(MJD_Siggen_Setup *setup){
     }
     memset(wpot[i], 0, setup->zlen*sizeof(*wpot[i]));
   }
-  if ((fp = fopen(setup->wp_name, "r")) == NULL){
-    error("failed to open file: %s\n", setup->wp_name);
+  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_name);
+  if ((fp = fopen(wp_file_name, "r")) == NULL){
+    error("failed to open file: %s\n", wp_file_name);
     return -1;
   }
+  free(wp_file_name); wp_file_name = NULL;
   lineno = 0;
   TELL_NORMAL("Reading weighting potential from file: %s\n", setup->wp_name);
   while (fgets(line, MAX_LINE, fp) != NULL){

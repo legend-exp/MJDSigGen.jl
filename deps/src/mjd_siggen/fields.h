@@ -47,4 +47,5 @@ int read_fields(MJD_Siggen_Setup *setup);
    MIN_TEMP & MAX_TEMP defines allowed range*/
 void set_temp(float temp, MJD_Siggen_Setup *setup);
 
+
 #endif /*#ifndef _FIELDS_H*/
