@@ -68,14 +68,21 @@ type Struct_MJD_Siggen_Setup
     # geometry
     xtal_length::Cfloat
     xtal_radius::Cfloat
-    top_bullet_radius::Cfloat
-    bottom_bullet_radius::Cfloat
     pc_length::Cfloat
     pc_radius::Cfloat
-    taper_length::Cfloat
     wrap_around_radius::Cfloat
     ditch_depth::Cfloat
     ditch_thickness::Cfloat
+    bottom_taper_length::Cfloat
+    hole_length::Cfloat
+    hole_radius::Cfloat
+    outer_taper_length::Cfloat
+    taper_angle::Cfloat
+    inner_taper_length::Cfloat
+    outer_taper_width::Cfloat
+    inner_taper_width::Cfloat
+    top_bullet_radius::Cfloat
+    bottom_bullet_radius::Cfloat
     Li_thickness::Cfloat
 
     # electric fields & weighing potentials
