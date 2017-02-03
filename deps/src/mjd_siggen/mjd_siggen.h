@@ -61,14 +61,21 @@ typedef struct {
   // geometry
   float xtal_length;          // z length
   float xtal_radius;          // radius
-  float top_bullet_radius;    // bulletization radius at top of crystal
-  float bottom_bullet_radius; // bulletization radius at bottom of BEGe crystal
   float pc_length;            // point contact length
   float pc_radius;            // point contact radius
-  float taper_length;         // size of 45-degree taper at bottom of ORTEC-type crystal
   float wrap_around_radius;   // wrap-around radius for BEGes. Set to zero for ORTEC
   float ditch_depth;          // depth of ditch next to wrap-around for BEGes. Set to zero for ORTEC
   float ditch_thickness;      // width of ditch next to wrap-around for BEGes. Set to zero for ORTEC
+  float bottom_taper_length;  // size of 45-degree taper at bottom of ORTEC-type crystal
+  float hole_length;          // length of hole, for inverted-coax style
+  float hole_radius;          // radius of hole, for inverted-coax style
+  float outer_taper_length;   // z-length of outside taper for inverted-coax style
+  float taper_angle;          // taper angle in degrees, for inner or outer taper
+  float inner_taper_length;   // z-length of inside (hole) taper for inverted-coax style
+  float outer_taper_width;    // r-width of outside taper at far top of crystal
+  float inner_taper_width;    // r-width of inside (hole) taper at far top of crystal
+  float top_bullet_radius;    // bulletization radius at top of crystal
+  float bottom_bullet_radius; // bulletization radius at bottom of BEGe crystal
   float Li_thickness;         // depth of full-charge-collection boundary for Li contact
 
   // electric fields & weighing potentials

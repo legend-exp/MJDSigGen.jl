@@ -20,7 +20,13 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
     "pc_length",
     "pc_radius",
     "bulletize_PC",
-    "taper_length",
+    "bottom_taper_length",  // note: these two keywords must stay adjacent, in this order
+    "taper_length",         // <- for compatibility with old mjd config files, == "bottom taper_length
+    "outer_taper_length",
+    "taper_angle",
+    "inner_taper_length",
+    "hole_length",
+    "hole_radius",
     "wrap_around_radius",
     "ditch_depth",
     "ditch_thickness",
@@ -112,6 +118,12 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
 		 key_word[i], config_file_name, n, line);
 	  return 1;
 	}
+
+        if (!strncmp(key_word[i], "taper_length", l)) {
+          i--;                      // use previous keyword = "bottom_taper_length" instead
+          l=strlen(key_word[i]);    // for backwards compatibiity wth old mjd config files
+        }
+
 	if (strstr(key_word[i], "verbosity_level")) {
 	  setup->verbosity = ii;
 	} else if (strstr(key_word[i], "xtal_length")) {
@@ -128,8 +140,18 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
 	  setup->pc_radius = fi;
 	} else if (strstr(key_word[i], "bulletize_PC")) {
 	  setup->bulletize_PC = ii;
-	} else if (strstr(key_word[i], "taper_length")) {
-	  setup->taper_length = fi;
+	} else if (strstr(key_word[i], "bottom_taper_length")) {
+	  setup->bottom_taper_length = fi;
+	} else if (strstr(key_word[i], "outer_taper_length")) {
+	  setup->outer_taper_length = fi;
+	} else if (strstr(key_word[i], "taper_angle")) {
+	  setup->taper_angle = fi;
+	} else if (strstr(key_word[i], "inner_taper_length")) {
+	  setup->inner_taper_length = fi;
+	} else if (strstr(key_word[i], "hole_length")) {
+	  setup->hole_length = fi;
+	} else if (strstr(key_word[i], "hole_radius")) {
+	  setup->hole_radius = fi;
 	} else if (strstr(key_word[i], "wrap_around_radius")) {
 	  setup->wrap_around_radius = fi;
 	} else if (strstr(key_word[i], "ditch_depth")) {
@@ -204,6 +226,51 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
     }
   }
   fclose(file);
+
+  if (setup->taper_angle > 0) {
+    /* convert taper angle to taper widths */
+    if (setup->outer_taper_length > 0) {
+      setup->outer_taper_width =
+        setup->outer_taper_length * tan(setup->taper_angle * 3.14159/180.0);
+      printf("  ->>  outer taper width: %f\n", setup->outer_taper_width);
+    }
+    if (setup->inner_taper_length > 0) {
+      setup->inner_taper_width =
+        setup->inner_taper_length * tan(setup->taper_angle * 3.14159/180.0);
+      printf("  ->>  inner taper width: %f\n", setup->inner_taper_width);
+    }
+  } else {
+    /* convert taper width to taper angle */
+    if (setup->outer_taper_length > 0 &&
+        setup->taper_angle > 0)
+      setup->taper_angle =
+        atan(setup->outer_taper_width/setup->outer_taper_length) * 180.0/3.14159;
+    if (setup->inner_taper_length > 0 &&
+        setup->taper_angle > 0)
+      setup->taper_angle =
+        atan(setup->inner_taper_width/setup->inner_taper_length) * 180.0/3.14159;
+    if (setup->taper_angle > 0)
+      printf("  ->>  taper angle: %f\n", setup->taper_angle);
+  }
+
+  /* some consistency checks */
+  if (setup->outer_taper_length > setup->xtal_length ||
+      setup->inner_taper_length > setup->hole_length ||
+      setup->hole_length > setup->xtal_length ||
+      (setup->hole_radius +
+       setup->outer_taper_width +
+       setup->inner_taper_width) > setup->xtal_radius) {
+    printf("\nERROR: Inconsistent detector dimesions:\n"
+           "   crystal length and radius: %5.2f %5.2f\n"
+           "      hole length and radius: %5.2f %5.2f\n"
+           "outer taper length and width: %5.2f %5.2f\n"
+           "inner taper length and width: %5.2f %5.2f\n\n",
+           setup->xtal_length, setup->xtal_radius,
+           setup->hole_length, setup->hole_radius,
+           setup->outer_taper_length, setup->outer_taper_width,
+           setup->inner_taper_length, setup->inner_taper_width);
+    return 1;
+  }
 
   return 0;
 }

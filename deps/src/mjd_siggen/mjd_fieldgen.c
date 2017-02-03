@@ -1,12 +1,14 @@
 /* program to calculate electric fields and weighting potentials
-              of PPC and BEGe Ge detectors by relaxation
+              of PPC BEGe, and inverted-coax-PC Ge detectors by relaxation
    author:           D.C. Radford
-   first written:    Nov 2007
-   this modified version for MJD:  Oct 2014
+   first written:         Nov 2007
+   MJD modified version:  Oct 2014, June 2016
       - uses the same (single) config file as modified MJD siggen
       - added intelligent coarse grid / refinement of grid
       - added interpolation of RC and LC positions on the grid
-   June 2016: added optional bulletization of point contact
+      - added optional bulletization of point contact
+   This modified version: Dec 2016
+      - added hole, inner taper length, outer taper length, taper angle
 
    TO DO:
       - add other bulletizations
@@ -25,6 +27,8 @@
 
 #define MAX_ITS 50000     // default max number of iterations for relaxation
 #define MAX_ITS_FACTOR 2  // factor by which max iterations is reduced as grid is refined
+#define OT_R  R - (int) (0.5 + (float)(z-L+OTL) * (float)OTW / (float)OTL)  // outer radius due to taper 
+#define IT_R  RH + (int) (0.5 + (float)(z-L+HTL) * (float)HTW / (float)HTL)  // inner radius due to taper 
 
 int report_config(FILE *fp_out, char *config_file_name);
 
@@ -35,14 +39,22 @@ int main(int argc, char **argv)
   MJD_Siggen_Setup setup;
 
   /* --- default values, normally over-ridden by values in a *.conf file --- */
-  int   R = 0;   // radius of detector, in grid lengths
-  int   L = 0;   // length of detector, in grid lengths
+  int   R  = 0;  // radius of detector, in grid lengths
+  int   L  = 0;  // length of detector, in grid lengths
   int   RC = 0;  // radius of central contact, in grid lengths
   int   LC = 0;  // length of central contact, in grid lengths
   int   LT = 0;  // length of taper, in grid lengths
   int   RO = 0;  // radius of wrap-around outer (Li) contact, in grid lengths
   int   LO = 0;  // length of ditch next to wrap-around outer (Li) contact, in grid lengths
   int   WO = 0;  // width of ditch next to wrap-around outer (Li) contact, in grid lengths
+
+  int   RH  = 10; // radius of core hole in outer (Li) contact, in grid lengths
+  int   LH  = 80; // length of core hole in outer (Li) contact, in grid lengths
+  int   OTL = 80; // length of outer radial taper of crystal, in grid lengths
+  int   OTW = 10; // width/amount of outer radial taper (decrease in radius), in grid lengths
+  int   HTL = 0;  // length of radial tapered part of core hole, in grid lengths
+  int   HTW = 0;  // width/amount of radial taper (increase in radius) of hole, in grid lengths
+
   float BV = 0;  // bias voltage
   float N = 1;   // charge density at z=0 in units of e+10/cm3
   float M = 0;   // charge density gradient, in units of e+10/cm4
@@ -89,14 +101,21 @@ int main(int argc, char **argv)
 
       L  = LL = lrint(setup.xtal_length/grid);
       R  = RR = lrint(setup.xtal_radius/grid);
-      // BRT = lrint(setup.top_bullet_radius/grid);
-      // BRB = lrint(setup.bottom_bullet_radius/grid);
       LC = lrint(setup.pc_length/grid);
       RC = lrint(setup.pc_radius/grid);
-      LT = lrint(setup.taper_length/grid);
       RO = lrint(setup.wrap_around_radius/grid);
       LO = lrint(setup.ditch_depth/grid);
       WO = lrint(setup.ditch_thickness/grid);
+      LT = lrint(setup.bottom_taper_length/grid);
+
+      LH = lrint(setup.hole_length/grid);
+      RH = lrint(setup.hole_radius/grid);
+      OTL = lrint(setup.outer_taper_length/grid);
+      OTW = lrint(setup.outer_taper_width/grid);
+      HTL = lrint(setup.inner_taper_length/grid);
+      HTW = lrint(setup.inner_taper_width/grid);
+      // BRT = lrint(setup.top_bullet_radius/grid);
+      // BRB = lrint(setup.bottom_bullet_radius/grid);
       // LiT = lrint(setup.Li_thickness/grid);
       N  = setup.impurity_z0;
       M  = setup.impurity_gradient;
@@ -135,32 +154,48 @@ int main(int argc, char **argv)
   }
   if (WV < 0 || WV > 2) WV = 0;
 
-  if (RO <= 0.0 || RO >= R) {
-    RO = R - LT;    // inner radius of taper, in grid lengths
-    printf("\n\n"
-	   " Crystal: Radius x Length: %.1f x %.1f mm\n"
-	   "   Taper: %.1f mm\n"
-	   "No wrap-around contact or ditch...\n"
-	   "Bias: %.0f V\n"
-	   "Impurities: (%.3f + %.3fz) e10/cm3\n\n",
-	   grid * (float) R, grid * (float) L, grid * (float) LT,
-	   BV, N, M);
-  } else {
-    printf("\n\n"
-	   "    Crystal: Radius x length: %.1f x %.1f mm\n"
-	   "      Taper: %.1f mm\n"
-	   "Wrap-around: Radius x ditch x gap:  %.1f x %.1f x %.1f mm\n"
-	   "       Bias: %.0f V\n"
-	   " Impurities: (%.3f + %.3fz) e10/cm3\n\n",
-	   grid * (float) R, grid * (float) L, grid * (float) LT,
-	   grid * (float) RO, grid * (float) LO, grid * (float) WO, BV, N, M);
+  printf("\n\n"
+         "      Crystal: Radius x Length: %.1f x %.1f mm\n"
+         " Bottom taper: %.1f mm\n",
+	   grid * (float) R, grid * (float) L, grid * (float) LT);
+  if (LH > 0) {
+    if (HTL > 0)
+      printf("    Core hole: Radius x length: %.1f x %.1f mm,"
+             " taper %.1f x %.1f mm (%2.f degrees)\n",
+             grid * (float) RH, grid * (float) LH,
+             grid * (float) HTW, grid * (float) HTL, setup.taper_angle);
+    else
+      printf("    Core hole: Radius x length: %.1f x %.1f mm\n",
+             grid * (float) RH, grid * (float) LH);
   }
-  if (setup.bulletize_PC)
-    printf("   Contact: Radius x length: %.1f x %.1f mm, bulletized\n\n",
+  if (OTL > 0) {
+      printf("Outside taper: %.1f mm over x %.1f mm (%.2f degrees)\n\n",
+             grid * (float) OTW, grid * (float) OTL, setup.taper_angle);
+  } else if (LH <= 0) {
+    printf("  No core hole or outside taper.\n");
+  } else {
+    printf("  No outside taper.\n");
+  }
+  if (LC > 0 && setup.bulletize_PC) {
+    printf("      Contact: Radius x length: %.1f x %.1f mm, bulletized\n",
 	   grid * (float) RC, grid * (float) LC);
-  else
-    printf("   Contact: Radius x length: %.1f x %.1f mm, not bulletized\n\n",
+  } else if (LC > 0) {
+    printf("      Contact: Radius x length: %.1f x %.1f mm, not bulletized\n",
 	   grid * (float) RC, grid * (float) LC);
+  } else {
+    printf("      Contact: Radius x length: %.1f x %.1f mm\n",
+	   grid * (float) RC, grid * (float) LC);
+  }
+  if (RO <= 0.0 || RO >= R) {
+    RO = R - LT;    // inner radius of bottom taper, in grid lengths
+    printf(" No wrap-around contact or ditch...\n");
+  } else {
+    printf("  Wrap-around: Radius x ditch x gap:  %.1f x %.1f x %.1f mm\n",
+	   grid * (float) RO, grid * (float) LO, grid * (float) WO);
+  }
+  printf("         Bias: %.0f V\n"
+         "   Impurities: (%.3f + %.3fz) e10/cm3\n\n",
+         BV, N, M);
 
     if ((BV < 0 && N < 0) || (BV > 0 && N > 0)) {
     printf("ERROR: Expect bias and impurity to be opposite sign!\n");
@@ -359,10 +394,16 @@ int main(int argc, char **argv)
       }
     }
     
-    LT = lrint(setup.taper_length/grid);
+    LT = lrint(setup.bottom_taper_length/grid);
     RO = lrint(setup.wrap_around_radius/grid);
     LO = lrint(setup.ditch_depth/grid);
     WO = lrint(setup.ditch_thickness/grid);
+    LH = lrint(setup.hole_length/grid);
+    RH = lrint(setup.hole_radius/grid);
+    OTL = lrint(setup.outer_taper_length/grid);
+    OTW = lrint(setup.outer_taper_width/grid);
+    HTL = lrint(setup.inner_taper_length/grid);
+    HTW = lrint(setup.inner_taper_width/grid);
     // LiT = lrint(setup.Li_thickness/grid);
 
     S = setup.impurity_surface * e_over_E / grid;
@@ -418,8 +459,12 @@ int main(int argc, char **argv)
 	// outside (HV) contact:
 	if (z == L ||
 	    r == R ||
-	    r >= z + R - LT ||       // taper
-	    (z == 0 && r >= RO)) {   // wrap-around
+	    r >= z + R - LT ||          // bottom taper
+	    (z == 0 && r >= RO) ||      // wrap-around
+            (L-z <= LH && r <= RH) ||   // hole
+            (L-z < OTL && r >= OT_R) || // outer taper
+            (L-z < HTL && r <= IT_R)    // inner taper
+            ) {
 	  bulk[z][r] = -1;               // value of v[*][z][r] is fixed...
 	  v[0][z][r] = v[1][z][r] = BV;  // at the bias voltage
 	}
@@ -797,10 +842,16 @@ int main(int argc, char **argv)
       }
     }
     
-    LT = lrint(setup.taper_length/grid);
+    LT = lrint(setup.bottom_taper_length/grid);
     RO = lrint(setup.wrap_around_radius/grid);
     LO = lrint(setup.ditch_depth/grid);
     WO = lrint(setup.ditch_thickness/grid);
+    LH = lrint(setup.hole_length/grid);
+    RH = lrint(setup.hole_radius/grid);
+    OTL = lrint(setup.outer_taper_length/grid);
+    OTW = lrint(setup.outer_taper_width/grid);
+    HTL = lrint(setup.inner_taper_length/grid);
+    HTW = lrint(setup.inner_taper_width/grid);
     // LiT = lrint(setup.Li_thickness/grid);
     if (RO <= 0.0 || RO >= R) RO = R - LT;    // inner radius of taper, in grid lengths
 
@@ -852,8 +903,12 @@ int main(int argc, char **argv)
 	// outside (HV) contact:
 	if (z == L ||
 	    r == R ||
-	    r >= z + R - LT ||       // taper
-	    (z == 0 && r >= RO)) {   // wrap-around
+	    r >= z + R - LT ||          // bottom taper
+	    (z == 0 && r >= RO) ||      // wrap-around
+            (L-z <= LH && r <= RH) ||   // hole
+            (L-z < OTL && r >= OT_R) || // outer taper
+            (L-z < HTL && r <= IT_R)    // inner taper
+            ) {
 	  bulk[z][r] = -1;                 // value of v[*][z][r] is fixed...
 	  v[0][z][r] = v[1][z][r] = 0.0;   // to zero
 	}
