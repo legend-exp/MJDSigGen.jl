@@ -59,3 +59,9 @@ function outside_detector(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
 
     r != 0
 end
+
+
+const fieldgen_exe = joinpath(dirname(@__FILE__), "..", "deps", "usr", "bin", "mjd_fieldgen")
+
+fieldgen(config_filename::AbstractString) =
+    run(`$fieldgen_exe -c $config_filename`)
