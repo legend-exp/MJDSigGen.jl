@@ -1,5 +1,7 @@
 # MJDSigGen.jl
 
+[![Build Status](https://travis-ci.org/mppmu/MJDSigGen.jl.svg?branch=master)](https://travis-ci.org/mppmu/MJDSigGen.jl)
+
 MJDSigGen.jl provides a [Julia](http://julialang.org/) wrapper around
 [David Radford's](http://radware.phy.ornl.gov/) field-calculation and
 signal-generation package for non-segmented high-purity Germanium detectors,
