@@ -26,6 +26,8 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
     "outer_taper_length",
     "taper_angle",
     "inner_taper_length",
+    "outer_taper_width",
+    "inner_taper_width",
     "hole_length",
     "hole_radius",
     "wrap_around_radius",
