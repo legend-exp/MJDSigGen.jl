@@ -153,6 +153,10 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
 	  setup->taper_angle = fi;
 	} else if (strstr(key_word[i], "inner_taper_length")) {
 	  setup->inner_taper_length = fi;
+	} else if (strstr(key_word[i], "outer_taper_width")) {
+	  setup->outer_taper_width = fi;
+	} else if (strstr(key_word[i], "inner_taper_width")) {
+	  setup->inner_taper_width = fi;
 	} else if (strstr(key_word[i], "hole_length")) {
 	  setup->hole_length = fi;
 	} else if (strstr(key_word[i], "hole_radius")) {
@@ -247,11 +251,11 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
   } else {
     /* convert taper width to taper angle */
     if (setup->outer_taper_length > 0 &&
-        setup->taper_angle > 0)
+        setup->outer_taper_width > 0)
       setup->taper_angle =
         atan(setup->outer_taper_width/setup->outer_taper_length) * 180.0/3.14159;
     if (setup->inner_taper_length > 0 &&
-        setup->taper_angle > 0)
+        setup->inner_taper_width > 0)
       setup->taper_angle =
         atan(setup->inner_taper_width/setup->inner_taper_length) * 180.0/3.14159;
     if (setup->taper_angle > 0)
