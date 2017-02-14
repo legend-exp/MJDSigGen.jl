@@ -1,12 +1,11 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
 function read_config!(setup::Struct_MJD_Siggen_Setup, config_filename::AbstractString)
-    r = ccall(
+    ccall(
         @sgsym(:read_config), Cint,
         (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
         pointer(config_filename), Ref(setup)
-    )
-    r != 0 && error("read_config failed.")
+    ) != 0 && error("read_config failed.")
     setup
 end
 
@@ -15,12 +14,11 @@ read_config(config_filename::AbstractString) =
 
 
 function signal_calc_init!(setup::Struct_MJD_Siggen_Setup, config_filename::AbstractString)
-    r = ccall(
+    ccall(
         @sgsym(:signal_calc_init), Cint,
         (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
         pointer(config_filename), Ref(setup)
-    )
-    r != 0 && error("signal_calc_init failed.")
+    ) != 0 && error("signal_calc_init failed.")
     setup
 end
 
@@ -28,24 +26,78 @@ signal_calc_init(config_filename::AbstractString) =
     signal_calc_init!(Struct_MJD_Siggen_Setup(), config_filename)
 
 
-function get_signal!(signal, setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+function signal_calc_finalize!(setup::Struct_MJD_Siggen_Setup)
+    ccall(
+        @sgsym(:signal_calc_finalize), Cint,
+        (Ptr{Struct_MJD_Siggen_Setup},),
+        Ref(setup)
+    ) != 0 && error("signal_calc_finalize failed.")
+    setup
+end
+
+
+function get_signal!(signal::DenseArray{Float32, 1}, setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
     (length(linearindices(signal)) < setup.ntsteps_out) && throw(BoundsError())
 
     pt = Struct_point(location[1], location[2], location[3])
 
-    r = ccall(
+    ccall(
         @sgsym(:get_signal), Cint,
         (Struct_point, Ptr{Float32}, Ptr{Struct_MJD_Siggen_Setup}),
         pt, signal, Ref(setup)
-    )
-    r < 0 && error("Point not in crystal or has no field: $pt")
+    ) < 0 && error("Point not in crystal or has no field: $pt")
 
     signal
 end
 
 
-get_signal(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}) =
+get_signal!(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}) =
     get_signal!(zeros(Float32, setup.ntsteps_out), setup, location)
+
+
+function _drift_path_ptr(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+    if t == :e
+        setup.dpath_e
+    elseif t == :h
+        setup.dpath_h
+    else
+        error("Charge carrier type must be :e or :h")
+    end
+end
+
+
+function drift_path_len(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+    path_ptr = _drift_path_ptr(setup, t)
+    n = setup.time_steps_calc
+    @inbounds for i in 1:n
+        pt = unsafe_load(path_ptr, i)
+        if pt == Struct_point()
+            return i - 1
+        end
+    end
+    return n
+end
+
+
+function drift_path!(path::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setup, t::Symbol)
+    (size(path, 2) < 2) && throw(BoundsError())
+
+    path_ptr = _drift_path_ptr(setup, t)
+    n = min(size(path, 1), setup.time_steps_calc)
+    path_idxs = indices(path, 1)
+    @inbounds for i in 1:n
+        pt = unsafe_load(path_ptr, i)
+        j = path_idxs[i]
+        path[j, 1] = pt.x
+        path[j, 2] = pt.y
+        path[j, 3] = pt.z
+    end
+
+    path
+end
+
+drift_path(setup::Struct_MJD_Siggen_Setup, t::Symbol) =
+    drift_path!(zeros(Float32, drift_path_len(setup, t), 3), setup, t)
 
 
 function outside_detector(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
