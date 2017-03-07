@@ -113,6 +113,41 @@ function outside_detector(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
 end
 
 
+"""
+    nearest_field_grid_index(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+
+Returns:
+* (:outside, i, j), if outside crystal or too far from a valid grid point
+* (:interpol, i, j, if interpolation is okay
+* (:extrapol, i, j), if we can find a point but extrapolation is needed
+"""
+function nearest_field_grid_index(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+    r, ϕ, z = cart2cyl(location ...)
+    cyl_pos_val = Struct_cyl_pt(r, ϕ, z)
+    cyl_idx_ref = Ref(Struct_cyl_int_pt(0, 0, 0))
+
+    retcode = ccall(
+        @sgsym(:nearest_field_grid_index), Cint,
+        (Struct_cyl_pt, Ptr{Struct_cyl_int_pt}, Ptr{Struct_MJD_Siggen_Setup}, ),
+        cyl_pos_val, cyl_idx_ref, Ref(setup)
+    )
+
+    cyl_idx = cyl_idx_ref.x
+
+    i,j = Int(cyl_idx.z + 1), Int(cyl_idx.r + 1)
+
+    if retcode < 0
+        (:outside, 0, 0)
+    elseif retcode == 0
+        (:interpol, i, j)
+    elseif retcode == 1
+        (:extrapol, i, j)
+    else
+        error("Don't know how to interpret return code $retcode of nearest_field_grid_index unknown")
+    end
+end
+
+
 const fieldgen_exe = joinpath(dirname(@__FILE__), "..", "deps", "usr", "bin", "mjd_fieldgen")
 
 fieldgen(config_filename::AbstractString) =
