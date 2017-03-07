@@ -17,6 +17,14 @@
 #include "point.h"
 #include "mjd_siggen.h"
 
+/* nearest_field_grid_index
+   find existing integer field grid index closest to pt
+   returns <0 if outside crystal or too far from a valid grid point
+            0 if interpolation is okay
+            1 if we can find a point but extrapolation is needed
+*/
+int nearest_field_grid_index(cyl_pt pt, cyl_int_pt *ipt, MJD_Siggen_Setup *setup);
+
 /* field_setup
    given a field directory file, read electic field and weighting
    potential tables from files listed in directory

@@ -21,7 +21,6 @@
 
 #define MAX_FNAME_LEN 512
 
-static int nearest_field_grid_index(cyl_pt pt, cyl_int_pt *ipt, MJD_Siggen_Setup *setup);
 static int grid_weights(cyl_pt pt, cyl_int_pt ipt, float out[2][2], MJD_Siggen_Setup *setup);
 static cyl_pt efield(cyl_pt pt, cyl_int_pt ipt, MJD_Siggen_Setup *setup);
 static int setup_efield(MJD_Siggen_Setup *setup);
@@ -242,14 +241,9 @@ static int grid_weights(cyl_pt pt, cyl_int_pt ipt, float out[2][2],
 }
 
 
-/*find existing integer field grid index closest to pt*/
 /* added DCR */
-static int nearest_field_grid_index(cyl_pt pt, cyl_int_pt *ipt,
+int nearest_field_grid_index(cyl_pt pt, cyl_int_pt *ipt,
 				    MJD_Siggen_Setup *setup){
-  /* returns <0 if outside crystal or too far from a valid grid point
-              0 if interpolation is okay
-              1 if we can find a point but extrapolation is needed
-  */
   static cyl_pt  last_pt;
   static cyl_int_pt last_ipt;
   static int     last_ret = -99;
