@@ -26,3 +26,17 @@ function read_fields(setup::Struct_MJD_Siggen_Setup)
 
     E_pot, W_pot, E_abs, E_r, E_z
 end
+
+
+cyl2cart(r, ϕ, z) = (r * cos(ϕ), r * sin(ϕ), z)
+
+
+function cart2cyl(x, y, z)
+    r = √(x^2 + y^2)
+    if x == 0
+        ϕ = (y > 0) ? π/2 : -π/2
+    else
+        ϕ = (x < 0) ? atan(y/x) + π : atan(y/x)
+    end
+    (r, ϕ, z)
+end
