@@ -1,4 +1,6 @@
-cmake_minimum_required (VERSION 2.8.12)
+# Actually requires cmake v2.8.12 on OS-X for CMAKE_MACOSX_RPATH, but
+# Travis CI only offers 2.8.7 on Linux
+cmake_minimum_required (VERSION 2.8.7)
 
 project (mjd_siggen)
 
