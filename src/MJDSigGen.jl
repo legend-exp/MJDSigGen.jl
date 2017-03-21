@@ -1,9 +1,8 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-module MJDSigGen
-
 __precompile__(true)
 
+module MJDSigGen
 
 const deps_jl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
 if isfile(deps_jl)
@@ -18,9 +17,11 @@ macro sgsym(func)
 end
 
 
-include("types.jl")
-include("util.jl")
-include("wrappers.jl")
+include.([
+    "types.jl",
+    "util.jl",
+    "wrappers.jl",
+])
 
 
 end # module
