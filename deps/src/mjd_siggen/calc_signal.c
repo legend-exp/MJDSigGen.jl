@@ -75,6 +75,7 @@
    returns 0 for success
 */
 int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
+  signal_calc_finalize(setup);
 
   if (read_config(config_file_name, setup)) return 1;
 
@@ -407,8 +408,14 @@ int rc_integrate(float *s_in, float *s_out, float tau, int time_steps){
  */
 int signal_calc_finalize(MJD_Siggen_Setup *setup){
   fields_finalize(setup);
-  free(setup->dpath_h);
-  free(setup->dpath_e);
+  if (setup->dpath_h != NULL) {
+    free(setup->dpath_h);
+    setup->dpath_h = NULL;
+  }
+  if (setup->dpath_e != NULL) {
+    free(setup->dpath_e);
+    setup->dpath_e = NULL;
+  }
   return 0;
 }
 

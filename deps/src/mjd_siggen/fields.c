@@ -34,6 +34,7 @@ static int efield_exists(cyl_pt pt, MJD_Siggen_Setup *setup);
    returns 0 for success
 */
 int field_setup(MJD_Siggen_Setup *setup){
+  fields_finalize(setup);
 
   setup->rmin  = 0;
   setup->rmax  = setup->xtal_radius;
@@ -615,16 +616,26 @@ static int setup_wp(MJD_Siggen_Setup *setup){
 int fields_finalize(MJD_Siggen_Setup *setup){
   int i;
 
-  for (i = 0; i < lrintf((setup->rmax - setup->rmin)/setup->rstep) + 1; i++){
-    free(setup->efld[i]);
-    free(setup->wpot[i]);
+  if (setup->efld != NULL) {
+    for (i = 0; i < lrintf((setup->rmax - setup->rmin)/setup->rstep) + 1; i++){
+      free(setup->efld[i]);
+    }
+    free(setup->efld);
+    setup->efld = NULL;
   }
-  free(setup->efld);
-  free(setup->wpot);
-  free(setup->v_lookup);
-  setup->efld = NULL;
-  setup->wpot = NULL;
-  setup->v_lookup = NULL;
+
+  if (setup->wpot != NULL) {
+    for (i = 0; i < lrintf((setup->rmax - setup->rmin)/setup->rstep) + 1; i++){
+      free(setup->wpot[i]);
+    }
+    free(setup->wpot);
+    setup->wpot = NULL;
+  }
+
+  if (setup->v_lookup != NULL) {
+    free(setup->v_lookup);
+    setup->v_lookup = NULL;
+  }
 
   return 1;
 }
