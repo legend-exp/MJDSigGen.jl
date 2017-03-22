@@ -83,6 +83,13 @@ using Base.Test
             @test 0 <= charge_signal[1] < 0.01
             n_steps_drift_out = ceil(Int, (max(size(path_e, 1), size(path_h, 1)) / setup.time_steps_calc * setup.ntsteps_out)) + 1
             @test charge_signal[n_steps_drift_out] ≈ 1
+
+            @test begin
+                MJDSigGen.signal_calc_finalize!(setup)
+                result = (setup.wpot == C_NULL && setup.dpath_h == C_NULL)
+                MJDSigGen.signal_calc_finalize!(setup)
+                result
+            end
         end
     finally
         rm(scratchdir; recursive = true)
