@@ -144,6 +144,7 @@ type Struct_MJD_Siggen_Setup
 
     Struct_MJD_Siggen_Setup() = begin
         x = new()
+        fill!(unsafe_wrap(Array, Ptr{UInt8}(pointer_from_objref(x)), sizeof(x)), 0)
         x
     end
 end
