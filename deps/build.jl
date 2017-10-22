@@ -10,7 +10,7 @@ builddir = joinpath(BinDeps.builddir(libmjd_siggen), "mjd_siggen")
 
 # BSD systems (other than macOS) use BSD Make rather than GNU Make by default
 # We need GNU Make, and on such systems GNU make is invoked as `gmake`
-make = is_bsd() && !is_apple() ? "gmake" : "make"
+make = Sys.is_bsd() && !Sys.is_apple() ? "gmake" : "make"
 
 provides(SimpleBuild,
     (@build_steps begin
