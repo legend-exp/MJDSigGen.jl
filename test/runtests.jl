@@ -1,5 +1,5 @@
 using MJDSigGen
-using Base.Test
+using Compat.Test
 
 @testset "Package MJDSigGen" begin
     scratchdir = mktempdir()
