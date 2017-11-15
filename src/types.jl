@@ -1,6 +1,6 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-immutable Struct_point
+struct Struct_point
     x::Cfloat
     y::Cfloat
     z::Cfloat
@@ -9,7 +9,7 @@ end
 Struct_point() = Struct_point(0, 0, 0)
 
 
-immutable Struct_int_pt
+struct Struct_int_pt
     x::Cint
     y::Cint
     z::Cint
@@ -18,7 +18,7 @@ end
 Struct_int_pt() = Struct_int_pt(0, 0, 0)
 
 
-immutable Struct_cyl_pt
+struct Struct_cyl_pt
     r::Cfloat
     phi::Cfloat
     z::Cfloat
@@ -27,7 +27,7 @@ end
 Struct_cyl_pt() = Struct_cyl_pt(0, 0, 0)
 
 
-immutable Struct_cyl_int_pt
+struct Struct_cyl_int_pt
     r::Cint
     phi::Cint
     z::Cint
@@ -36,7 +36,7 @@ end
 Struct_cyl_int_pt() = Struct_cyl_int_pt(0, 0, 0)
 
 
-type Struct_velocity_lookup
+mutable struct Struct_velocity_lookup
     e::Cfloat
     e100::Cfloat
     e110::Cfloat
@@ -61,7 +61,7 @@ type Struct_velocity_lookup
 end
 
 
-type Struct_MJD_Siggen_Setup
+mutable struct Struct_MJD_Siggen_Setup
     # general
     verbosity::Cint
 

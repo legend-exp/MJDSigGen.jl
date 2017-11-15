@@ -54,9 +54,9 @@ using Compat.Test
             @test MJDSigGen.outside_detector(setup, (10, 0, 10)) == false
 
             grid = setup.xtal_grid
-            @test MJDSigGen.nearest_field_grid_index(setup, (8, 0, 12)) == (:interpol, map(x -> round(Int, x), [12, 8] / grid) + 1...)
+            @test MJDSigGen.nearest_field_grid_index(setup, (8, 0, 12)) == (:interpol, round.(Int, [12, 8] / grid .+ 1)...)
             @test MJDSigGen.nearest_field_grid_index(setup, (10, 0, -10)) == (:outside,0,0)
-            @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, (map(x -> round(Int, x), [10.0, 1.0 * setup.xtal_radius] / grid) + [1, 0])...)
+            @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, round.(Int, [10.0, 1.0 * setup.xtal_radius] / grid + [1, 0])...)
         end
 
 
