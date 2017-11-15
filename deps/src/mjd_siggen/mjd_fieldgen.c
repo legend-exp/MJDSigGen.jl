@@ -469,7 +469,8 @@ int main(int argc, char **argv)
 	  v[0][z][r] = v[1][z][r] = BV;  // at the bias voltage
 	}
 	// inside (point) contact, with optional bulletization:
-	else if (z <= LC && r <= rrc[z]) {
+	else if ((z <= LC && r <= rrc[z]) ||
+                 (z == 0 && r < RO-WO)) {   // special case for GERDA, wrap to ditch
 	  bulk[z][r] = -1;                // value of v[*][z][r] is fixed...
 	  v[0][z][r] = v[1][z][r] = 0;    // at zero volts
 	  /* radial edge of inside contact; if the PC radius is not in the middle
@@ -915,7 +916,8 @@ int main(int argc, char **argv)
 	  v[0][z][r] = v[1][z][r] = 0.0;   // to zero
 	}
 	// inside (point) contact:
-	else if (z <= LC && r <= rrc[z]) {
+	else if ((z <= LC && r <= rrc[z]) ||
+                 (z == 0 && r < RO-WO)) {   // special case for GERDA, wrap to ditch
 	  bulk[z][r] = -1;                 // value of v[*][z][r] is fixed...
 	  v[0][z][r] = v[1][z][r] = 1.0;   // to 1.0
 	  // radial edge of inside contact:
