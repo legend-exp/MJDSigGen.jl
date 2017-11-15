@@ -2,8 +2,7 @@ using MJDSigGen
 using Compat.Test
 
 @testset "Package MJDSigGen" begin
-    scratchdir = mktempdir()
-    try
+    mktempdir() do scratchdir
         cp(joinpath("..", "examples"), joinpath(scratchdir, "examples"))
 
         config_file_rel_path = joinpath("examples", "config", "example.config")
@@ -91,7 +90,5 @@ using Compat.Test
                 result
             end
         end
-    finally
-        rm(scratchdir; recursive = true)
     end
 end
