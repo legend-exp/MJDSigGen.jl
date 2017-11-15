@@ -17,6 +17,9 @@ macro sgsym(func)
 end
 
 
+using Compat.DelimitedFiles
+
+
 include("types.jl")
 include("util.jl")
 include("wrappers.jl")
