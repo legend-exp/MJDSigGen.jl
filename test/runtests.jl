@@ -1,9 +1,8 @@
 using MJDSigGen
-using Base.Test
+using Compat.Test
 
 @testset "Package MJDSigGen" begin
-    scratchdir = mktempdir()
-    try
+    mktempdir() do scratchdir
         cp(joinpath("..", "examples"), joinpath(scratchdir, "examples"))
 
         config_file_rel_path = joinpath("examples", "config", "example.config")
@@ -55,26 +54,26 @@ using Base.Test
             @test MJDSigGen.outside_detector(setup, (10, 0, 10)) == false
 
             grid = setup.xtal_grid
-            @test MJDSigGen.nearest_field_grid_index(setup, (8, 0, 12)) == (:interpol, map(x -> round(Int, x), [12, 8] / grid) + 1...)
+            @test MJDSigGen.nearest_field_grid_index(setup, (8, 0, 12)) == (:interpol, round.(Int, [12, 8] / grid .+ 1)...)
             @test MJDSigGen.nearest_field_grid_index(setup, (10, 0, -10)) == (:outside,0,0)
-            @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, (map(x -> round(Int, x), [10.0, 1.0 * setup.xtal_radius] / grid) + [1, 0])...)
+            @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, round.(Int, [10.0, 1.0 * setup.xtal_radius] / grid + [1, 0])...)
         end
 
 
         @testset "siggen" begin
-            charge_signal = Array{Float32}(0)
+            charge_signal = Array{Float32, 1}()
             @test begin
                 charge_signal = MJDSigGen.get_signal!(setup, (10.1, 10.0, 10.0))::typeof(charge_signal)
                 size(charge_signal) == (setup.ntsteps_out,)
             end
 
-            path_e = Array{Float32}(0, 0)
+            path_e = Array{Float32}(undef, 0,0)
             @test begin
                 path_e = MJDSigGen.drift_path(setup, :e)::typeof(path_e)
                 (size(path_e, 2) == 3) && (0 < size(path_e, 1) <= setup.time_steps_calc)
             end
 
-            path_h = Array{Float32}(0, 0)
+            path_h = Array{Float32}(undef, 0,0)
             @test begin
                 path_h = MJDSigGen.drift_path(setup, :h)::typeof(path_h)
                 (size(path_h, 2) == 3) && (0 < size(path_h, 1) <= setup.time_steps_calc)
@@ -91,7 +90,5 @@ using Base.Test
                 result
             end
         end
-    finally
-        rm(scratchdir; recursive = true)
     end
 end

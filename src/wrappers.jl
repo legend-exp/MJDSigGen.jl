@@ -19,7 +19,7 @@ function signal_calc_init!(setup::Struct_MJD_Siggen_Setup, config_filename::Abst
         (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
         pointer(config_filename), Ref(setup)
     ) != 0 && error("signal_calc_init failed.")
-    finalizer(setup, signal_calc_finalize!)
+    finalizer(signal_calc_finalize!, setup)
     setup
 end
 
@@ -38,7 +38,7 @@ end
 
 
 function get_signal!(signal::DenseArray{Float32, 1}, setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
-    (length(linearindices(signal)) < setup.ntsteps_out) && throw(BoundsError())
+    (length(eachindex(signal)) < setup.ntsteps_out) && throw(BoundsError())
 
     pt = Struct_point(location[1], location[2], location[3])
 
@@ -85,7 +85,7 @@ function drift_path!(path::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setu
 
     path_ptr = _drift_path_ptr(setup, t)
     n = min(size(path, 1), setup.time_steps_calc)
-    path_idxs = indices(path, 1)
+    path_idxs = axes(path, 1)
     @inbounds for i in 1:n
         pt = unsafe_load(path_ptr, i)
         j = path_idxs[i]

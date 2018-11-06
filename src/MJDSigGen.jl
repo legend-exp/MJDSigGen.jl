@@ -17,11 +17,11 @@ macro sgsym(func)
 end
 
 
-include.([
-    "types.jl",
-    "util.jl",
-    "wrappers.jl",
-])
+using Compat.DelimitedFiles
 
+
+include("types.jl")
+include("util.jl")
+include("wrappers.jl")
 
 end # module
