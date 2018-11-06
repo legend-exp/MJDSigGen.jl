@@ -38,7 +38,7 @@ end
 
 
 function get_signal!(signal::DenseArray{Float32, 1}, setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
-    (length(linearindices(signal)) < setup.ntsteps_out) && throw(BoundsError())
+    (length(eachindex(signal)) < setup.ntsteps_out) && throw(BoundsError())
 
     pt = Struct_point(location[1], location[2], location[3])
 
