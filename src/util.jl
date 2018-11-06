@@ -2,7 +2,9 @@
 
 function tuplestr(s::NTuple{N,Cchar}) where {N}
     a = [c % UInt8 for c in s]
-    unsafe_string(pointer(a))
+    from = firstindex(a)
+    to = something(findfirst(x -> x == 0, a), lastindex(a) + 1) - 1
+    String(a[from:to])
 end
 
 
