@@ -85,7 +85,7 @@ function drift_path!(path::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setu
 
     path_ptr = _drift_path_ptr(setup, t)
     n = min(size(path, 1), setup.time_steps_calc)
-    path_idxs = indices(path, 1)
+    path_idxs = axes(path, 1)
     @inbounds for i in 1:n
         pt = unsafe_load(path_ptr, i)
         j = path_idxs[i]
