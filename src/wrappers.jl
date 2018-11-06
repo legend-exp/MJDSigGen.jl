@@ -4,7 +4,7 @@ function read_config!(setup::Struct_MJD_Siggen_Setup, config_filename::AbstractS
     ccall(
         @sgsym(:read_config), Cint,
         (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
-        pointer(config_filename), Ref(setup)
+        config_filename, Ref(setup)
     ) != 0 && error("read_config failed.")
     setup
 end
@@ -17,7 +17,7 @@ function signal_calc_init!(setup::Struct_MJD_Siggen_Setup, config_filename::Abst
     ccall(
         @sgsym(:signal_calc_init), Cint,
         (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
-        pointer(config_filename), Ref(setup)
+        config_filename, Ref(setup)
     ) != 0 && error("signal_calc_init failed.")
     finalizer(signal_calc_finalize!, setup)
     setup
