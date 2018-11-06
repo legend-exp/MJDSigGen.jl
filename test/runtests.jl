@@ -67,13 +67,13 @@ using Compat.Test
                 size(charge_signal) == (setup.ntsteps_out,)
             end
 
-            path_e = Array{Float32, 2}()
+            path_e = Array{Float32}(undef, 0,0)
             @test begin
                 path_e = MJDSigGen.drift_path(setup, :e)::typeof(path_e)
                 (size(path_e, 2) == 3) && (0 < size(path_e, 1) <= setup.time_steps_calc)
             end
 
-            path_h = Array{Float32, 2}()
+            path_h = Array{Float32}(undef, 0,0)
             @test begin
                 path_h = MJDSigGen.drift_path(setup, :h)::typeof(path_h)
                 (size(path_h, 2) == 3) && (0 < size(path_h, 1) <= setup.time_steps_calc)
