@@ -22,7 +22,7 @@ provides(SimpleBuild,
         @build_steps begin
             ChangeDirectory(builddir)
             `cmake -DCMAKE_INSTALL_PREFIX="$prefix" $srcdir`
-            `$make -j$(min(Sys.CPU_CORES, 8)) install`
+            `$make -j$(min(Sys.CPU_THREADS, 8)) install`
         end
     end), [libmjd_siggen], os = :Unix)
 
