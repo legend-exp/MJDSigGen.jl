@@ -16,8 +16,8 @@ wpot_file_name(setup::Struct_MJD_Siggen_Setup) =
     joinpath(dirname(config_file_name(setup)), tuplestr(setup.wp_name))
 
 function read_fields(setup::Struct_MJD_Siggen_Setup)
-    field_data = readdlm(field_file_name(setup))
-    wpot_data = readdlm(wpot_file_name(setup))
+    field_data = readdlm(field_file_name(setup), comments=true)
+    wpot_data = readdlm(wpot_file_name(setup), comments=true)
     n_r = setup.rlen
     n_z = setup.zlen
     assert(size(field_data, 1) == size(wpot_data, 1) == n_r * n_z)
