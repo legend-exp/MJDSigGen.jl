@@ -1,5 +1,5 @@
 using BinDeps
-using Compat.Sys: isapple,isbsd,islinux,isunix,iswindows
+using Base.Sys: isapple,isbsd,islinux,isunix,iswindows
 
 @BinDeps.setup
 

@@ -20,7 +20,7 @@ macro sgsym(func)
 end
 
 
-using Compat.DelimitedFiles
+using DelimitedFiles
 
 
 include("types.jl")
