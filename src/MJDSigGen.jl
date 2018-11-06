@@ -4,6 +4,9 @@ __precompile__(true)
 
 module MJDSigGen
 
+# Make Pkg aware that deps.jl will require Libdl:
+import Libdl
+
 const deps_jl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
 if isfile(deps_jl)
     include(deps_jl)
