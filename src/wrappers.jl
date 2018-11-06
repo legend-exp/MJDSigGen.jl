@@ -19,7 +19,7 @@ function signal_calc_init!(setup::Struct_MJD_Siggen_Setup, config_filename::Abst
         (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
         pointer(config_filename), Ref(setup)
     ) != 0 && error("signal_calc_init failed.")
-    finalizer(setup, signal_calc_finalize!)
+    finalizer(signal_calc_finalize!, setup)
     setup
 end
 
