@@ -220,162 +220,193 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
    Generates the signal originating at point pt, for charge q
    returns 0 for success
 */
-int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup) {
-  static float wpot, wpot_old, dwpot;
-  char   tmpstr[MAX_LINE];
-  point  new_pt;
-  vector v, dx;
-  float  vel0, vel1 = 0;
-  // double diffusion_coeff;
-  double repulsion_fact = 0.0, ds2, ds3, dv, ds_dt;
-  int    ntsteps, i, t, n, collect2pc, low_field=0;
+int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup) 
+{
+	static float wpot, wpot_old, dwpot;
+	char   tmpstr[MAX_LINE];
+	point  new_pt;
+  	vector v, dx;
+  	float  vel0, vel1 = 0;
+  	// double diffusion_coeff;
+  	double repulsion_fact = 0.0, ds2, ds3, dv, ds_dt;
+  	int    ntsteps, i, t, n, collect2pc, low_field=0;
 
-  new_pt = pt;
-  collect2pc = ((q > 0 && setup->impurity_z0 < 0) ||  // holes for p-type 
-		(q < 0 && setup->impurity_z0 > 0));   // electrons for n-type
-  /*
-  if (q > 0) {
-    diffusion_coeff = TWO_TIMES_DIFFUSION_COEF_H;
-  } else {
-    diffusion_coeff = TWO_TIMES_DIFFUSION_COEF_E;
-  }
-  */
-  ntsteps = setup->time_steps_calc;
-  for (t = 0; drift_velocity(new_pt, q, &v, setup) >= 0; t++) { 
-    if (q > 0) {
-      setup->dpath_h[t] = new_pt;
-    } else {
-      setup->dpath_e[t] = new_pt;
-    }
-    if (collect2pc) {
-      if (t == 0) {
-	vel1 = setup->final_vel = setup->initial_vel = vector_length(v);
-	setup->final_charge_size = setup->charge_cloud_size;
-	if (setup->use_diffusion) {
-	  if (setup->final_charge_size < 0.01) setup->final_charge_size = 0.01;
-	  /* for a spherically symmetric charge cloud, the equivalent
-	     delta-E at a distance of 1 sigma from the cloud center is
-	     dE = Q/(4*pi*epsilon*sigma^2)  (Q is charge inside the 3D 1-sigma envelope)
-	     dE (V/cm) = Q (C) * 1/(4*pi*epsilon) (N m2 / C2) / sigma2 (mm2)
-	     1 V/m = 1 N/C
-	     dE (V/cm) = Q (C) * 1/(4*pi*epsilon) (V m / C) / sigma2 (mm2)
-	     dE (V/cm) = repulsion_fact * FWHM/sigma / (FWHM^2) (mm2), so
-	     repulsion_fact = (FWHM/sigma)^3 * Q (C) * 1/(4*pi*epsilon) (V m / C) * mm/m * mm/cm
-	  */
-	  if (setup->energy > 0.1) {  // set up charge cloud self-repulsion
-	    repulsion_fact = setup->energy * 0.67*0.67*0.67 / 0.003; // charge in 1 sigma (3D)
-	    repulsion_fact /= 6.241e18;        // convert to Coulombs
-	    repulsion_fact *= 9.0e13/16.0;     // 1/(4*pi*epsilon)  (N m2 / C2) * 1e4
-	    repulsion_fact *= 2.355*2.355*2.355;      // convert FWHM to sigma
-	  }
+  	new_pt = pt;
+  	collect2pc = ((q > 0 && setup->impurity_z0 < 0) ||  // holes for p-type 
+		      (q < 0 && setup->impurity_z0 > 0));   // electrons for n-type
+  	/*
+  	if (q > 0) {
+    		diffusion_coeff = TWO_TIMES_DIFFUSION_COEF_H;
+  	} else {
+    		diffusion_coeff = TWO_TIMES_DIFFUSION_COEF_E;
+  	}
+  	*/
+  	ntsteps = setup->time_steps_calc;
+  	for (t = 0; drift_velocity(new_pt, q, &v, setup) >= 0; t++) { 
+    		if (q > 0) {
+      			setup->dpath_h[t] = new_pt;
+    		} else {
+      			setup->dpath_e[t] = new_pt;
+    		}
+    	
+		if (collect2pc) {
+      			if (t == 0) {
+				vel1 = setup->final_vel = setup->initial_vel = vector_length(v);
+				setup->final_charge_size = setup->charge_cloud_size;
+				if (setup->use_repulsion) {
+	  				if (setup->final_charge_size < 0.01) {
+						setup->final_charge_size = 0.01;
+					}
+					/* for a spherically symmetric charge cloud, the equivalent
+	     				delta-E at a distance of 1 sigma from the cloud center is
+	     				dE = Q/(4*pi*epsilon*sigma^2)  (Q is charge inside the 3D 1-sigma envelope)
+	     				dE (V/cm) = Q (C) * 1/(4*pi*epsilon) (N m2 / C2) / sigma2 (mm2)
+	     				1 V/m = 1 N/C
+	     				dE (V/cm) = Q (C) * 1/(4*pi*epsilon) (V m / C) / sigma2 (mm2)
+	     				dE (V/cm) = repulsion_fact * FWHM/sigma / (FWHM^2) (mm2), so
+	     				repulsion_fact = (FWHM/sigma)^3 * Q (C) * 1/(4*pi*epsilon) (V m / C) * mm/m * mm/cm
+	  				*/
+	  				if (setup->energy > 0.1) {  // set up charge cloud self-repulsion
+	    					repulsion_fact = setup->energy * 0.67*0.67*0.67 / 0.003; // charge in 1 sigma (3D)
+	    					repulsion_fact /= 6.241e18;        // convert to Coulombs
+	    					repulsion_fact *= 9.0e13/16.0;     // 1/(4*pi*epsilon)  (N m2 / C2) * 1e4
+	    					repulsion_fact *= 2.355*2.355*2.355;      // convert FWHM to sigma
+	  				}
+				}
+				TELL_CHATTY("initial v: %f (%e %e %e)\n",
+	    			setup->initial_vel, v.x, v.y, v.z);
+      			} else { // t!= 0 
+				/*
+				in the following, consider effects of acceleration, 
+	   			repulsion and diffusion separately 
+				*/
+	      
+				// include effect of acceleration
+				// start from : ds/s = dv/v 	
+				if (setup->use_acceleration) {
+					vel0 = vel1;
+					vel1 = vector_length(v);
+					setup->final_charge_size *= vel1/vel0;  // effect of acceleration
+				}
+	
+				// include effect of repulsion 
+				if (setup->use_repulsion) {
+					// include effects of acceleration and diffusion on cloud size
+					dv = repulsion_fact * setup->dv_dE /        // effect of repulsion
+	        				(setup->final_charge_size*setup->final_charge_size);
+					// FIXME? this next line could more more fine-grained
+					if (dv > 0.05) {
+						dv = 0.05;  // on account of drift velocity saturation
+					}
+				} else {
+					dv = 0;
+				}	
+	      
+				// include effect of diffusion
+				if (setup->use_diffusion) {
+					ds_dt = dv + DIFFUSION_COEF/setup->final_charge_size;  // dv = 0 if repulsion is 0
+				} else {
+					ds_dt = dv; // dv = 0 if repulsion is 0
+				}
+	
+				// in case ds_dt is too large (sigma small)
+				if (ds_dt > 0.05 || ds_dt * setup->step_time_calc > 0.1) {
+					// nonlinear growth due to small size; need more careful calculation
+					TELL_CHATTY("ds_dt = %.2f; size = %.2f", ds_dt, setup->final_charge_size);
+					// ds_dt = 0.05;  // artificially limit nonlinear growth
+	  				ds2 = 2.0 * DIFFUSION_COEF * setup->step_time_calc; // increase^2 from diff.
+	  				ds3 = (setup->final_charge_size*setup->final_charge_size *
+						(setup->final_charge_size + 
+						 3.0 * dv * setup->step_time_calc));         // FWHM^3 after repulsion
+	  				setup->final_charge_size = sqrt(ds2 + pow(ds3, 0.6667)); 
+	  				TELL_CHATTY(" -> %.2f\n", setup->final_charge_size);
+				} else {
+	  				setup->final_charge_size +=  ds_dt * setup->step_time_calc;  // effect of diff. + rep.
+				}
+    			} // if t==0
+
+    			TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
+				new_pt.x, new_pt.y, new_pt.z, v.x, v.y, v.z);
+    			if (t >= ntsteps - 2) {
+      				if (collect2pc || wpot > WP_THRESH_ELECTRONS) {
+					/* for p-type, this is hole or electron+high wp */
+					TELL_CHATTY("\nExceeded maximum number of time steps (%d)\n", ntsteps);
+					low_field = 1;
+					// return -1;
+      				}
+      				break;
+    			}
+    			if (wpotential(new_pt, &wpot, setup) != 0) {
+      				TELL_NORMAL("\nCan calculate velocity but not WP at %s!\n",
+			  			pt_to_str(tmpstr, MAX_LINE, new_pt));
+      				return -1;
+    			}
+    
+			TELL_CHATTY(" -> wp: %.4f\n", wpot);
+    			if (t > 0) signal[t] += q*(wpot - wpot_old);
+    			
+			// FIXME? Hack added by DCR to deal with undepleted point contact
+    			if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
+      				low_field = 1;
+      				break;
+    			}
+    			wpot_old = wpot;
+			dx = vector_scale(v, setup->step_time_calc);
+			new_pt = vector_add(new_pt, dx);
+    			// q = charge_trapping(dx, q); //FIXME
+  		}
+  
+		if (t == 0) {
+    			TELL_CHATTY("The starting point %s is outside the field.\n",
+				pt_to_str(tmpstr, MAX_LINE, pt));
+    			return -1;
+  		}
+
+  		if (low_field) {
+    			TELL_CHATTY("Too many time steps or low field; this may or may not be a problem.\n");
+  		} else {
+    			TELL_CHATTY("Drifted to edge of field grid, point: %s q: %.2f\n", 
+			pt_to_str(tmpstr, MAX_LINE, new_pt), q);
+
+	    		/* now we are outside the electric grid. figure out how much we must
+	    	   	drift to get to the crystal boundary */
+    			for (n = 0; n+t < ntsteps; n++){
+      				new_pt = vector_add(new_pt, dx);
+      				if (q > 0) setup->dpath_h[t+n] = new_pt;
+      				else setup->dpath_e[t+n] = new_pt;
+      				if (outside_detector(new_pt, setup)) break;
+    			}
+    			if (n == 0) n = 1; /* always drift at least one more step */
+    			// TELL_CHATTY(
+    			TELL_NORMAL("q: %.1f t: %d n: %d ((%.2f %.2f %.2f)=>(%.2f %.2f %.2f))\n", 
+			q, t, n, pt.x, pt.y, pt.z, new_pt.x, new_pt.y, new_pt.z);
+
+    			if (n + t >= ntsteps){
+      				if (q > 0 || wpot > WP_THRESH_ELECTRONS) { /* hole or electron+high wp */
+				TELL_CHATTY("Exceeded maximum number of time steps (%d)\n", ntsteps);
+				return -1;  /* FIXME DCR: does this happen? could this be improved? */
+      			}
+      			n = ntsteps -t;
+		}
+		/* make WP go gradually to 1 or 0 */
+    		if (wpot > 0.3) {
+      			dwpot = (1.0 - wpot)/n;
+    		} else {
+      			dwpot = - wpot/n;
+    		}
+
+    		/*now drift the final n steps*/
+    		dx = vector_scale(v, setup->step_time_calc);
+    		for (i = 0; i < n; i++) {
+      			signal[i+t] += q*dwpot;
+      			// q = charge_trapping(dx, q); //FIXME
+    		}
 	}
-	TELL_CHATTY("initial v: %f (%e %e %e)\n",
-		    setup->initial_vel, v.x, v.y, v.z);
-      } else if (setup->use_diffusion) {
-	vel0 = vel1;
-	vel1 = vector_length(v);
-	setup->final_charge_size *= vel1/vel0;  // effect of acceleration
-	// include effects of acceleration and diffusion on cloud size
-	dv = repulsion_fact * setup->dv_dE /        // effect of repulsion
-	        (setup->final_charge_size*setup->final_charge_size);
-	// FIXME? this next line could more more fine-grained
-	if (dv > 0.05) dv = 0.05;  // on account of drift velocity saturation
-	ds_dt = dv + DIFFUSION_COEF/setup->final_charge_size;  // effect of diffusion
-	if (ds_dt > 0.05 || ds_dt * setup->step_time_calc > 0.1) {
-	  // nonlinear growth due to small size; need more careful calculation
-	  TELL_CHATTY("ds_dt = %.2f; size = %.2f", ds_dt, setup->final_charge_size);
-	  // ds_dt = 0.05;  // artificially limit nonlinear growth
-	  ds2 = 2.0 * DIFFUSION_COEF * setup->step_time_calc; // increase^2 from diff.
-	  ds3 = (setup->final_charge_size*setup->final_charge_size *
-		 (setup->final_charge_size +
-		  3.0 * dv * setup->step_time_calc));         // FWHM^3 after repulsion
-	  setup->final_charge_size = sqrt(ds2 + pow(ds3, 0.6667)); 
-	  TELL_CHATTY(" -> %.2f\n", setup->final_charge_size);
-	} else {
-	  setup->final_charge_size +=  ds_dt * setup->step_time_calc;  // effect of diff. + rep.
-	}
-      }
-    }
+	
+	TELL_CHATTY("q:%.2f pt: %s\n", q, pt_to_str(tmpstr, MAX_LINE, pt));
+  	if (q > 0) setup->final_vel = vector_length(v);
 
-    TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
-		new_pt.x, new_pt.y, new_pt.z, v.x, v.y, v.z);
-    if (t >= ntsteps - 2) {
-      if (collect2pc || wpot > WP_THRESH_ELECTRONS) {
-	/* for p-type, this is hole or electron+high wp */
-	TELL_CHATTY("\nExceeded maximum number of time steps (%d)\n", ntsteps);
-	low_field = 1;
-	// return -1;
-      }
-      break;
-    }
-    if (wpotential(new_pt, &wpot, setup) != 0) {
-      TELL_NORMAL("\nCan calculate velocity but not WP at %s!\n",
-		  pt_to_str(tmpstr, MAX_LINE, new_pt));
-      return -1;
-    }
-    TELL_CHATTY(" -> wp: %.4f\n", wpot);
-    if (t > 0) signal[t] += q*(wpot - wpot_old);
-    // FIXME? Hack added by DCR to deal with undepleted point contact
-    if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
-      low_field = 1;
-      break;
-    }
-    wpot_old = wpot;
-
-    dx = vector_scale(v, setup->step_time_calc);
-    new_pt = vector_add(new_pt, dx);
-    // q = charge_trapping(dx, q); //FIXME
-  }
-  if (t == 0) {
-    TELL_CHATTY("The starting point %s is outside the field.\n",
-		pt_to_str(tmpstr, MAX_LINE, pt));
-    return -1;
-  }
-
-  if (low_field) {
-    TELL_CHATTY("Too many time steps or low field; this may or may not be a problem.\n");
-  } else {
-    TELL_CHATTY("Drifted to edge of field grid, point: %s q: %.2f\n", 
-		pt_to_str(tmpstr, MAX_LINE, new_pt), q);
-
-    /* now we are outside the electric grid. figure out how much we must
-       drift to get to the crystal boundary */
-    for (n = 0; n+t < ntsteps; n++){
-      new_pt = vector_add(new_pt, dx);
-      if (q > 0) setup->dpath_h[t+n] = new_pt;
-      else setup->dpath_e[t+n] = new_pt;
-      if (outside_detector(new_pt, setup)) break;
-    }
-    if (n == 0) n = 1; /* always drift at least one more step */
-    // TELL_CHATTY(
-    TELL_NORMAL("q: %.1f t: %d n: %d ((%.2f %.2f %.2f)=>(%.2f %.2f %.2f))\n", 
-		q, t, n, pt.x, pt.y, pt.z, new_pt.x, new_pt.y, new_pt.z);
-
-    if (n + t >= ntsteps){
-      if (q > 0 || wpot > WP_THRESH_ELECTRONS) { /* hole or electron+high wp */
-	TELL_CHATTY("Exceeded maximum number of time steps (%d)\n", ntsteps);
-	return -1;  /* FIXME DCR: does this happen? could this be improved? */
-      }
-      n = ntsteps -t;
-    }
-    /* make WP go gradually to 1 or 0 */
-    if (wpot > 0.3) {
-      dwpot = (1.0 - wpot)/n;
-    } else {
-      dwpot = - wpot/n;
-    }
-
-    /*now drift the final n steps*/
-    dx = vector_scale(v, setup->step_time_calc);
-    for (i = 0; i < n; i++){
-      signal[i+t] += q*dwpot;
-      // q = charge_trapping(dx, q); //FIXME
-    }
-  }
-  TELL_CHATTY("q:%.2f pt: %s\n", q, pt_to_str(tmpstr, MAX_LINE, pt));
-  if (q > 0) setup->final_vel = vector_length(v);
-
-  return 0;
+  	return 0;
 }
 
 //FIXME -- placeholder function. Even parameter list is dodgy
