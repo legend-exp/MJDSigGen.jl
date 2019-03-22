@@ -56,7 +56,9 @@
         (4.3e-5 * setup->step_time_calc * 300.0/setup->xtal_temp)
 */
 /* In the new method, I use dsigma/dt = D/sigma to calculate FWHM */
-#define DIFFUSION_COEF   (setup->v_over_E * 0.67)
+#define DIFFUSION_COEF   (setup->v_over_E * 0.388)
+/* David uses 0.67 = 2.355 * 2.355 * 0.12. */
+/* I'll try  0.388 = 2.355 * 2.355 * 0.07. */
 /* above is my own approximate parameterization of measurements of Jacoboni et al.
    0.67 = 2.355 * 2.355 * 0.12    to get D in mm2/s, and scaled to FWHM2/sigma2
    v_over_E = drift velocity / electric field   ~  mu
