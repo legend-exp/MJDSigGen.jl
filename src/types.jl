@@ -113,6 +113,8 @@ mutable struct Struct_MJD_Siggen_Setup
     step_time_calc::Cfloat
     step_time_out::Cfloat
     charge_cloud_size::Cfloat
+    use_acceleration::Cint
+    use_repulsion::Cint
     use_diffusion::Cint
     energy::Cfloat
 
