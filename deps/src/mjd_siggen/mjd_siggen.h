@@ -107,6 +107,8 @@ typedef struct {
   float step_time_out;        // length of time step for output signal, in ns
   //    nonzero values in the next few lines significantly slow down the code
   float charge_cloud_size;    // initial FWHM of charge cloud, in mm; set to zero for point charges
+  int   use_acceleration;     // set to 0/1 for ignore/add acceleration effects on charge cloud size
+  int   use_repulsion;        // set to 0/1 for ignore/add repulsion as the charges drift
   int   use_diffusion;        // set to 0/1 for ignore/add diffusion as the charges drift
   float energy;               // set to energy > 0 to use charge cloud self-repulsion, in keV
 
