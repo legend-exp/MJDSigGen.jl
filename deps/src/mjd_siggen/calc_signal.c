@@ -323,66 +323,64 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 				} else {
 	  				setup->final_charge_size +=  ds_dt * setup->step_time_calc;  // effect of diff. + rep.
 				}
-    			} // if t==0
-
-    			TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
-				new_pt.x, new_pt.y, new_pt.z, v.x, v.y, v.z);
-    			if (t >= ntsteps - 2) {
-      				if (collect2pc || wpot > WP_THRESH_ELECTRONS) {
-					/* for p-type, this is hole or electron+high wp */
-					TELL_CHATTY("\nExceeded maximum number of time steps (%d)\n", ntsteps);
-					low_field = 1;
-					// return -1;
-      				}
-      				break;
-    			}
-    			if (wpotential(new_pt, &wpot, setup) != 0) {
-      				TELL_NORMAL("\nCan calculate velocity but not WP at %s!\n",
-			  			pt_to_str(tmpstr, MAX_LINE, new_pt));
-      				return -1;
-    			}
-    
-			TELL_CHATTY(" -> wp: %.4f\n", wpot);
-    			if (t > 0) signal[t] += q*(wpot - wpot_old);
-    			
-			// FIXME? Hack added by DCR to deal with undepleted point contact
-    			if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
-      				low_field = 1;
-      				break;
-    			}
-    			wpot_old = wpot;
-			dx = vector_scale(v, setup->step_time_calc);
-			new_pt = vector_add(new_pt, dx);
-    			// q = charge_trapping(dx, q); //FIXME
-  		}
+    			} // end of if t==0
+		} // end of collect2pc
+		
+    		TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
+			new_pt.x, new_pt.y, new_pt.z, v.x, v.y, v.z);
+    		if (t >= ntsteps - 2) {
+      			if (collect2pc || wpot > WP_THRESH_ELECTRONS) {
+				/* for p-type, this is hole or electron+high wp */
+				TELL_CHATTY("\nExceeded maximum number of time steps (%d)\n", ntsteps);
+				low_field = 1;
+				// return -1;
+      			}
+      			break;
+    		}
+    		if (wpotential(new_pt, &wpot, setup) != 0) {
+      			TELL_NORMAL("\nCan calculate velocity but not WP at %s!\n",
+		  			pt_to_str(tmpstr, MAX_LINE, new_pt));
+      			return -1;
+    		}
+    		TELL_CHATTY(" -> wp: %.4f\n", wpot);
+    		if (t > 0) signal[t] += q*(wpot - wpot_old);
+    		
+		// FIXME? Hack added by DCR to deal with undepleted point contact
+    		if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
+      			low_field = 1;
+      			break;
+    		}
+    		wpot_old = wpot;
+		dx = vector_scale(v, setup->step_time_calc);
+		new_pt = vector_add(new_pt, dx);
+    		// q = charge_trapping(dx, q); //FIXME
+  	} // end of for loop
   
-		if (t == 0) {
-    			TELL_CHATTY("The starting point %s is outside the field.\n",
-				pt_to_str(tmpstr, MAX_LINE, pt));
-    			return -1;
-  		}
+	if (t == 0) {
+		TELL_CHATTY("The starting point %s is outside the field.\n",
+			pt_to_str(tmpstr, MAX_LINE, pt));
+		return -1;
+	}
 
-  		if (low_field) {
-    			TELL_CHATTY("Too many time steps or low field; this may or may not be a problem.\n");
-  		} else {
-    			TELL_CHATTY("Drifted to edge of field grid, point: %s q: %.2f\n", 
-			pt_to_str(tmpstr, MAX_LINE, new_pt), q);
-
-	    		/* now we are outside the electric grid. figure out how much we must
-	    	   	drift to get to the crystal boundary */
-    			for (n = 0; n+t < ntsteps; n++){
-      				new_pt = vector_add(new_pt, dx);
-      				if (q > 0) setup->dpath_h[t+n] = new_pt;
-      				else setup->dpath_e[t+n] = new_pt;
-      				if (outside_detector(new_pt, setup)) break;
-    			}
-    			if (n == 0) n = 1; /* always drift at least one more step */
-    			// TELL_CHATTY(
-    			TELL_NORMAL("q: %.1f t: %d n: %d ((%.2f %.2f %.2f)=>(%.2f %.2f %.2f))\n", 
-			q, t, n, pt.x, pt.y, pt.z, new_pt.x, new_pt.y, new_pt.z);
-
-    			if (n + t >= ntsteps){
-      				if (q > 0 || wpot > WP_THRESH_ELECTRONS) { /* hole or electron+high wp */
+	if (low_field) {
+		TELL_CHATTY("Too many time steps or low field; this may or may not be a problem.\n");
+	} else {
+    		TELL_CHATTY("Drifted to edge of field grid, point: %s q: %.2f\n", 
+		pt_to_str(tmpstr, MAX_LINE, new_pt), q);
+    		/* now we are outside the electric grid. figure out how much we must
+    	   	drift to get to the crystal boundary */
+		for (n = 0; n+t < ntsteps; n++){
+			new_pt = vector_add(new_pt, dx);
+			if (q > 0) setup->dpath_h[t+n] = new_pt;
+			else setup->dpath_e[t+n] = new_pt;
+			if (outside_detector(new_pt, setup)) break;
+		}
+    		if (n == 0) n = 1; /* always drift at least one more step */
+    		// TELL_CHATTY(
+    		TELL_NORMAL("q: %.1f t: %d n: %d ((%.2f %.2f %.2f)=>(%.2f %.2f %.2f))\n", 
+		q, t, n, pt.x, pt.y, pt.z, new_pt.x, new_pt.y, new_pt.z);
+    		if (n + t >= ntsteps){
+      			if (q > 0 || wpot > WP_THRESH_ELECTRONS) { /* hole or electron+high wp */
 				TELL_CHATTY("Exceeded maximum number of time steps (%d)\n", ntsteps);
 				return -1;  /* FIXME DCR: does this happen? could this be improved? */
       			}
@@ -394,19 +392,18 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
     		} else {
       			dwpot = - wpot/n;
     		}
-
-    		/*now drift the final n steps*/
-    		dx = vector_scale(v, setup->step_time_calc);
-    		for (i = 0; i < n; i++) {
-      			signal[i+t] += q*dwpot;
-      			// q = charge_trapping(dx, q); //FIXME
-    		}
+		/*now drift the final n steps*/
+		dx = vector_scale(v, setup->step_time_calc);
+		for (i = 0; i < n; i++) {
+			signal[i+t] += q*dwpot;
+			// q = charge_trapping(dx, q); //FIXME
+		}
 	}
-	
+		
 	TELL_CHATTY("q:%.2f pt: %s\n", q, pt_to_str(tmpstr, MAX_LINE, pt));
-  	if (q > 0) setup->final_vel = vector_length(v);
+	if (q > 0) setup->final_vel = vector_length(v);
 
-  	return 0;
+	return 0;
 }
 
 //FIXME -- placeholder function. Even parameter list is dodgy
