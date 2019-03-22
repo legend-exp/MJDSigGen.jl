@@ -52,6 +52,8 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
     "step_time_calc",
     "step_time_out",
     "charge_cloud_size",
+    "use_acceleration",
+    "use_repulsion",
     "use_diffusion",
     "energy",
     "verbosity_level",
