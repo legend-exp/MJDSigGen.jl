@@ -107,6 +107,8 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
 	    }
 	    name[ok] = '\0';	    
 	  } else if (!strncmp("time_steps_calc", key_word[i], l) ||
+		     !strncmp("use_acceleration", key_word[i], l) ||
+		     !strncmp("use_repulsion", key_word[i], l) ||
 		     !strncmp("use_diffusion", key_word[i], l) ||
 		     !strncmp("verbosity_level", key_word[i], l) ||
 		     !strncmp("max_iterations", key_word[i], l) ||
@@ -209,6 +211,10 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
 	  setup->step_time_out = fi;
 	} else if (strstr(key_word[i], "charge_cloud_size")) {
 	  setup->charge_cloud_size = fi;
+	} else if (strstr(key_word[i], "use_acceleration")) {
+	  setup->use_acceleration = ii;
+	} else if (strstr(key_word[i], "use_repulsion")) {
+	  setup->use_repulsion= ii;
 	} else if (strstr(key_word[i], "use_diffusion")) {
 	  setup->use_diffusion = ii;
 	} else if (strstr(key_word[i], "energy")) {
