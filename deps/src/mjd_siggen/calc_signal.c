@@ -77,29 +77,29 @@
    returns 0 for success
 */
 int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
-  signal_calc_finalize(setup);
-
-  if (read_config(config_file_name, setup)) return 1;
-
-  TELL_CHATTY("r: %.2f  z: %.2f\n", setup->xtal_radius, setup->xtal_length);
-  setup->ntsteps_out = setup->time_steps_calc /
-    lrintf(setup->step_time_out/setup->step_time_calc);
-  TELL_NORMAL("Will use %d time steps in calculations, each %.2f ns long;\n"
-	      "the output signals will have %d time steps, each %.2f ns long\n", 
-	      setup->time_steps_calc, setup->step_time_calc,
-	      setup->ntsteps_out, setup->step_time_out);
-
-  TELL_NORMAL("Reading field data...\n");
-  if (field_setup(setup) != 0) return -1;
-  
-  if ((setup->dpath_e = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL ||
-      (setup->dpath_h = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL) {
-    error("Path malloc failed\n");
-    return -1;
-  }
-
-  tell("Setup of signal calculation done\n");
-  return 0;
+	signal_calc_finalize(setup);
+	
+	if (read_config(config_file_name, setup)) return 1;
+	
+	TELL_CHATTY("r: %.2f  z: %.2f\n", setup->xtal_radius, setup->xtal_length);
+	setup->ntsteps_out = setup->time_steps_calc /
+	  lrintf(setup->step_time_out/setup->step_time_calc);
+	TELL_NORMAL("Will use %d time steps in calculations, each %.2f ns long;\n"
+	        "the output signals will have %d time steps, each %.2f ns long\n", 
+	        setup->time_steps_calc, setup->step_time_calc,
+	        setup->ntsteps_out, setup->step_time_out);
+	
+	TELL_NORMAL("Reading field data...\n");
+	if (field_setup(setup) != 0) return -1;
+	
+	if ((setup->dpath_e = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL ||
+		(setup->dpath_h = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL) {
+		error("Path malloc failed\n");
+		return -1;
+	}
+	
+	tell("Setup of signal calculation done\n");
+	return 0;
 }
 
 /* get_signal
@@ -108,112 +108,112 @@ int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
    if signal_out == NULL => no signal is stored
 */
 int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
-  static float *signal, *sum, *tmp;
-  static int tsteps = 0;
-  float w, x, y;
-  char  tmpstr[MAX_LINE];
-  int   j, k, l, dt, err, comp_f;
+	static float *signal, *sum, *tmp;
+	static int tsteps = 0;
+	float w, x, y;
+	char  tmpstr[MAX_LINE];
+	int   j, k, l, dt, err, comp_f;
 
-  /* first time -- allocate signal and sum arrays */
-  if (tsteps != setup->time_steps_calc) {
-    tsteps = setup->time_steps_calc;
-    if ((signal = (float *) malloc(tsteps*sizeof(*signal))) == NULL ||
-	(tmp    = (float *) malloc(tsteps*sizeof(*tmp))) == NULL ||
-	(sum    = (float *) malloc(tsteps*sizeof(*sum))) == NULL) {
-      error("malloc failed in get_signal\n");
-      return -1;
-    }
-  }
-
-  for (j = 0; j < tsteps; j++) signal[j] = 0.0;
-
-  if (outside_detector(pt, setup)) {
-    TELL_CHATTY("Point %s is outside detector!\n", pt_to_str(tmpstr, MAX_LINE, pt));
-    return -1;
-  }
-  TELL_CHATTY("Calculating signal for %s...\n", pt_to_str(tmpstr, MAX_LINE, pt));
-
-  memset(setup->dpath_e, 0, tsteps*sizeof(point));
-  memset(setup->dpath_h, 0, tsteps*sizeof(point));
-
-  err = make_signal(pt, signal, ELECTRON_CHARGE, setup);
-  err = make_signal(pt, signal, HOLE_CHARGE, setup);
-  /* make_signal returns 0 for success; require hole signal but not electron */
-
-  /* change from current signal to charge signal, i.e.
-     each time step contains the summed signals of all previous time steps */
-  for (j = 1; j < tsteps; j++) signal[j] += signal[j-1];
-
-  if (signal_out != NULL) {
-
-    if (setup->charge_cloud_size > 0.001 || setup->use_diffusion) {
-      /* convolute with a Gaussian to correct for charge cloud size
-	 and initial velocity
-	 charge_cloud_size = initial FWHM of charge cloud, in mm,
-	 NOTE this uses initial velocity of holes only;
-	 this may not be quite right if electron signal is strong */
-      /* difference in time between center and edge of charge cloud */
-      dt = (int) (1.5f + setup->charge_cloud_size /
-		  (setup->step_time_calc * setup->initial_vel));
-      if (setup->initial_vel < 0.00001f) dt = 0;
-      TELL_CHATTY("Initial vel, size, dt = %f mm/ns, %f mm, %d steps\n",
-		  setup->initial_vel, setup->charge_cloud_size, dt);
-      if (setup->use_diffusion) {
-	dt = (int) (1.5f + setup->final_charge_size /
-		    (setup->step_time_calc * setup->final_vel));
-	TELL_CHATTY("  Final vel, size, dt = %f mm/ns, %f mm, %d steps\n",
-		    setup->final_vel, setup->final_charge_size, dt);
-      }
-      if (dt > 1) {
-	/* Gaussian */
-	w = ((float) dt) / 2.355;
-	l = dt/10;     // use l to speed up convolution of waveform with gaussian;
-	if (l < 1) {   // instead of using every 1-ns step, use steps of FWHM/10
-	  l = 1;
-	} else if (setup->step_time_out > setup->preamp_tau) {
-	  if (l > setup->step_time_out/setup->step_time_calc)
-	    l = setup->step_time_out/setup->step_time_calc;
-	} else {
-	  if (l > setup->preamp_tau/setup->step_time_calc)
-	    l = setup->preamp_tau/setup->step_time_calc;
+	/* first time -- allocate signal and sum arrays */
+	if (tsteps != setup->time_steps_calc) {
+		tsteps = setup->time_steps_calc;
+		if ((signal = (float *) malloc(tsteps*sizeof(*signal))) == NULL ||
+			(tmp    = (float *) malloc(tsteps*sizeof(*tmp))) == NULL ||
+			(sum    = (float *) malloc(tsteps*sizeof(*sum))) == NULL) {
+			error("malloc failed in get_signal\n");
+			return -1;
+		}
 	}
-	// TELL_CHATTY(">> l: %d\n", l);
-	for (j = 0; j < tsteps; j++) {
-	  sum[j] = 1.0;
-	  tmp[j] = signal[j];
+
+	for (j = 0; j < tsteps; j++) signal[j] = 0.0;
+	
+	if (outside_detector(pt, setup)) {
+		TELL_CHATTY("Point %s is outside detector!\n", pt_to_str(tmpstr, MAX_LINE, pt));
+		return -1;
 	}
-	for (k = l; k < 2*dt; k+=l) {
-	  x = ((float) k)/w;
-	  y = exp(-x*x/2.0);
-	  for (j = 0; j < tsteps - k; j++){
-	    sum[j] += y;
-	    tmp[j] += signal[j+k] * y;
-	    sum[j+k] += y;
-	    tmp[j+k] += signal[j] * y;
-	  }
+	TELL_CHATTY("Calculating signal for %s...\n", pt_to_str(tmpstr, MAX_LINE, pt));
+	
+	memset(setup->dpath_e, 0, tsteps*sizeof(point));
+	memset(setup->dpath_h, 0, tsteps*sizeof(point));
+	
+	err = make_signal(pt, signal, ELECTRON_CHARGE, setup);
+	err = make_signal(pt, signal, HOLE_CHARGE, setup);
+	/* make_signal returns 0 for success; require hole signal but not electron */
+	
+	/* change from current signal to charge signal, i.e.
+	   each time step contains the summed signals of all previous time steps */
+	for (j = 1; j < tsteps; j++) signal[j] += signal[j-1];
+	
+	if (signal_out != NULL) {
+
+    	if (setup->charge_cloud_size > 0.001 || setup->use_diffusion) {
+    		/* convolute with a Gaussian to correct for charge cloud size
+			and initial velocity
+			charge_cloud_size = initial FWHM of charge cloud, in mm,
+			NOTE this uses initial velocity of holes only;
+			this may not be quite right if electron signal is strong */
+    		/* difference in time between center and edge of charge cloud */
+    		dt = (int) (1.5f + setup->charge_cloud_size /
+			    (setup->step_time_calc * setup->initial_vel));
+    		if (setup->initial_vel < 0.00001f) dt = 0;
+    		TELL_CHATTY("Initial vel, size, dt = %f mm/ns, %f mm, %d steps\n",
+			    setup->initial_vel, setup->charge_cloud_size, dt);
+    		if (setup->use_diffusion) {
+				dt = (int) (1.5f + setup->final_charge_size /
+			    (setup->step_time_calc * setup->final_vel));
+				TELL_CHATTY("  Final vel, size, dt = %f mm/ns, %f mm, %d steps\n",
+		    	setup->final_vel, setup->final_charge_size, dt);
+      		}
+      		if (dt > 1) {
+				/* Gaussian */
+				w = ((float) dt) / 2.355;
+				l = dt/10;     // use l to speed up convolution of waveform with gaussian;
+				if (l < 1) {   // instead of using every 1-ns step, use steps of FWHM/10
+					l = 1;
+				} else if (setup->step_time_out > setup->preamp_tau) {
+					if (l > setup->step_time_out/setup->step_time_calc)
+				    	l = setup->step_time_out/setup->step_time_calc;
+				} else {
+					if (l > setup->preamp_tau/setup->step_time_calc)
+				    	l = setup->preamp_tau/setup->step_time_calc;
+				}
+				// TELL_CHATTY(">> l: %d\n", l);
+				for (j = 0; j < tsteps; j++) {
+					sum[j] = 1.0;
+					tmp[j] = signal[j];
+				}
+				for (k = l; k < 2*dt; k+=l) {
+					x = ((float) k)/w;
+					y = exp(-x*x/2.0);
+					for (j = 0; j < tsteps - k; j++) {
+						sum[j] += y;
+						tmp[j] += signal[j+k] * y;
+						sum[j+k] += y;
+						tmp[j+k] += signal[j] * y;
+					}
+				}
+				for (j = 0; j < tsteps; j++) {
+					signal[j] = tmp[j]/sum[j];
+				}
+			}
+		}
+
+		/* now, compress the signal and place it in the signal_out array;
+		   truncate the signal if time_steps_calc % ntsteps_out != 0 */
+		comp_f = setup->time_steps_calc/setup->ntsteps_out;
+		for (j = 0; j < setup->ntsteps_out; j++) signal_out[j] = 0;
+		for (j = 0; j < setup->ntsteps_out*comp_f; j++)
+		  signal_out[j/comp_f] += signal[j]/comp_f;
+		
+		/* do RC integration for preamp risetime */
+		if (setup->preamp_tau/setup->step_time_out >= 0.1f)
+			rc_integrate(signal_out, signal_out,
+				setup->preamp_tau/setup->step_time_out, setup->ntsteps_out);
 	}
-        for (j = 0; j < tsteps; j++){
-          signal[j] = tmp[j]/sum[j];
-        }
-      }
-    }
 
-    /* now, compress the signal and place it in the signal_out array;
-       truncate the signal if time_steps_calc % ntsteps_out != 0 */
-    comp_f = setup->time_steps_calc/setup->ntsteps_out;
-    for (j = 0; j < setup->ntsteps_out; j++) signal_out[j] = 0;
-    for (j = 0; j < setup->ntsteps_out*comp_f; j++)
-      signal_out[j/comp_f] += signal[j]/comp_f;
-
-    /* do RC integration for preamp risetime */
-    if (setup->preamp_tau/setup->step_time_out >= 0.1f)
-      rc_integrate(signal_out, signal_out,
-		   setup->preamp_tau/setup->step_time_out, setup->ntsteps_out);
-  }
-
-  /* make_signal returns 0 for success; require hole signal but not electron */
-  if (err) return -1;
-  return 1;
+	/* make_signal returns 0 for success; require hole signal but not electron */
+	if (err) return -1;
+	return 1;
 }
 
 /* make_signal
@@ -243,11 +243,11 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
   	*/
   	ntsteps = setup->time_steps_calc;
   	for (t = 0; drift_velocity(new_pt, q, &v, setup) >= 0; t++) { 
-    		if (q > 0) {
-      			setup->dpath_h[t] = new_pt;
-    		} else {
-      			setup->dpath_e[t] = new_pt;
-    		}
+    	if (q > 0) {
+    		setup->dpath_h[t] = new_pt;
+    	} else {
+    		setup->dpath_e[t] = new_pt;
+    	}
     	
 		if (collect2pc) {
       			if (t == 0) {
