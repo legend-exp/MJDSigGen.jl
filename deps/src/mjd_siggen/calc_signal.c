@@ -146,7 +146,8 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
 	
 	if (signal_out != NULL) {
 
-    	if (setup->charge_cloud_size > 0.001 || setup->use_diffusion) {
+    	if (setup->charge_cloud_size > 0.001 || setup->use_diffusion
+					|| setup->use_acceleration || setup->use_repulsion) {
     		/* convolute with a Gaussian to correct for charge cloud size
 			and initial velocity
 			charge_cloud_size = initial FWHM of charge cloud, in mm,
@@ -158,7 +159,7 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
     		if (setup->initial_vel < 0.00001f) dt = 0;
     		TELL_CHATTY("Initial vel, size, dt = %f mm/ns, %f mm, %d steps\n",
 			    setup->initial_vel, setup->charge_cloud_size, dt);
-    		if (setup->use_diffusion) {
+    		if (setup->use_diffusion || setup->use_acceleration || setup->use_repulsion) {
 				dt = (int) (1.5f + setup->final_charge_size /
 			    (setup->step_time_calc * setup->final_vel));
 				TELL_CHATTY("  Final vel, size, dt = %f mm/ns, %f mm, %d steps\n",
@@ -323,7 +324,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 				} else {
 	  				setup->final_charge_size +=  ds_dt * setup->step_time_calc;  // effect of diff. + rep.
 				}
-    			} // end of if t==0
+    		} // end of if t==0
 		} // end of collect2pc
 		
     		TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
