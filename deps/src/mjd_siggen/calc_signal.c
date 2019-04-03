@@ -319,10 +319,14 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 	  				ds3 = (setup->final_charge_size*setup->final_charge_size *
 						(setup->final_charge_size + 
 						 3.0 * dv * setup->step_time_calc));         // FWHM^3 after repulsion
-	  				setup->final_charge_size = sqrt(ds2 + pow(ds3, 0.6667)); 
-	  				TELL_CHATTY(" -> %.2f\n", setup->final_charge_size);
+					if(setup->use_diffusion || setup->use_repulsion) {
+	  					setup->final_charge_size = sqrt(ds2 + pow(ds3, 0.6667)); 
+	  				}
+					TELL_CHATTY(" -> %.2f\n", setup->final_charge_size);
 				} else {
-	  				setup->final_charge_size +=  ds_dt * setup->step_time_calc;  // effect of diff. + rep.
+					if(setup->use_diffusion || setup->use_repulsion) {
+	  					setup->final_charge_size +=  ds_dt * setup->step_time_calc;  // effect of diff. + rep.
+					}
 				}
     		} // end of if t==0
 		} // end of collect2pc
