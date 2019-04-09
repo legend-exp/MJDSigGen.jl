@@ -244,11 +244,11 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
   	*/
   	ntsteps = setup->time_steps_calc;
   	for (t = 0; drift_velocity(new_pt, q, &v, setup) >= 0; t++) { 
-    	if (q > 0) {
-    		setup->dpath_h[t] = new_pt;
-    	} else {
-    		setup->dpath_e[t] = new_pt;
-    	}
+		if (q > 0) {
+			setup->dpath_h[t] = new_pt;
+		} else {
+			setup->dpath_e[t] = new_pt;
+		}
     	
 		if (collect2pc) {
 			if (t == 0) {
