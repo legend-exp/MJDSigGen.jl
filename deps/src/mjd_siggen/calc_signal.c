@@ -276,7 +276,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 				}
 				TELL_CHATTY("initial v: %f (%e %e %e)\n",
 	    			setup->initial_vel, v.x, v.y, v.z);
-      		} else { // t!= 0 
+			} else { // t!= 0 
 				/*
 				in the following, consider effects of acceleration, 
 				repulsion and diffusion separately 
