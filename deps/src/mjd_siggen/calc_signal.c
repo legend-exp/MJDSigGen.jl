@@ -251,7 +251,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
     	}
     	
 		if (collect2pc) {
-      			if (t == 0) {
+			if (t == 0) {
 				vel1 = setup->final_vel = setup->initial_vel = vector_length(v);
 				setup->final_charge_size = setup->charge_cloud_size;
 				if (setup->use_repulsion) {
@@ -281,7 +281,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 				in the following, consider effects of acceleration, 
 	   			repulsion and diffusion separately 
 				*/
-	      
+				
 				// include effect of acceleration
 				// start from : ds/s = dv/v 	
 				if (setup->use_acceleration) {
@@ -289,7 +289,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 					vel1 = vector_length(v);
 					setup->final_charge_size *= vel1/vel0;  // effect of acceleration
 				}
-	
+
 				// include effect of repulsion 
 				if (setup->use_repulsion) {
 					// include effects of acceleration and diffusion on cloud size
@@ -331,35 +331,35 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
     		} // end of if t==0
 		} // end of collect2pc
 		
-    		TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
-			new_pt.x, new_pt.y, new_pt.z, v.x, v.y, v.z);
-    		if (t >= ntsteps - 2) {
-      			if (collect2pc || wpot > WP_THRESH_ELECTRONS) {
+    	TELL_CHATTY("pt: (%.2f %.2f %.2f), v: (%e %e %e)",
+		new_pt.x, new_pt.y, new_pt.z, v.x, v.y, v.z);
+    	if (t >= ntsteps - 2) {
+      		if (collect2pc || wpot > WP_THRESH_ELECTRONS) {
 				/* for p-type, this is hole or electron+high wp */
 				TELL_CHATTY("\nExceeded maximum number of time steps (%d)\n", ntsteps);
 				low_field = 1;
 				// return -1;
-      			}
-      			break;
-    		}
-    		if (wpotential(new_pt, &wpot, setup) != 0) {
-      			TELL_NORMAL("\nCan calculate velocity but not WP at %s!\n",
-		  			pt_to_str(tmpstr, MAX_LINE, new_pt));
-      			return -1;
-    		}
-    		TELL_CHATTY(" -> wp: %.4f\n", wpot);
-    		if (t > 0) signal[t] += q*(wpot - wpot_old);
-    		
+      		}
+      		break;
+    	}
+    	if (wpotential(new_pt, &wpot, setup) != 0) {
+      		TELL_NORMAL("\nCan calculate velocity but not WP at %s!\n",
+				pt_to_str(tmpstr, MAX_LINE, new_pt));
+      		return -1;
+    	}
+    	TELL_CHATTY(" -> wp: %.4f\n", wpot);
+    	if (t > 0) signal[t] += q*(wpot - wpot_old);
+    	
 		// FIXME? Hack added by DCR to deal with undepleted point contact
-    		if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
-      			low_field = 1;
-      			break;
-    		}
-    		wpot_old = wpot;
+    	if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
+      		low_field = 1;
+      		break;
+    	}
+    	wpot_old = wpot;
 		dx = vector_scale(v, setup->step_time_calc);
 		new_pt = vector_add(new_pt, dx);
-    		// q = charge_trapping(dx, q); //FIXME
-  	} // end of for loop
+		// q = charge_trapping(dx, q); //FIXME
+	} // end of for loop
   
 	if (t == 0) {
 		TELL_CHATTY("The starting point %s is outside the field.\n",
@@ -372,8 +372,8 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 	} else {
     		TELL_CHATTY("Drifted to edge of field grid, point: %s q: %.2f\n", 
 		pt_to_str(tmpstr, MAX_LINE, new_pt), q);
-    		/* now we are outside the electric grid. figure out how much we must
-    	   	drift to get to the crystal boundary */
+    	/* now we are outside the electric grid. figure out how much we must
+    	drift to get to the crystal boundary */
 		for (n = 0; n+t < ntsteps; n++){
 			new_pt = vector_add(new_pt, dx);
 			if (q > 0) setup->dpath_h[t+n] = new_pt;
@@ -392,11 +392,11 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
       			n = ntsteps -t;
 		}
 		/* make WP go gradually to 1 or 0 */
-    		if (wpot > 0.3) {
-      			dwpot = (1.0 - wpot)/n;
-    		} else {
-      			dwpot = - wpot/n;
-    		}
+    	if (wpot > 0.3) {
+      		dwpot = (1.0 - wpot)/n;
+    	} else {
+      		dwpot = - wpot/n;
+    	}
 		/*now drift the final n steps*/
 		dx = vector_scale(v, setup->step_time_calc);
 		for (i = 0; i < n; i++) {
