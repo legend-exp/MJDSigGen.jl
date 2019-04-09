@@ -146,26 +146,26 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
 	
 	if (signal_out != NULL) {
 
-    	if (setup->charge_cloud_size > 0.001 || setup->use_diffusion
+		if (setup->charge_cloud_size > 0.001 || setup->use_diffusion
 					|| setup->use_acceleration || setup->use_repulsion) {
-    		/* convolute with a Gaussian to correct for charge cloud size
+			/* convolute with a Gaussian to correct for charge cloud size
 			and initial velocity
 			charge_cloud_size = initial FWHM of charge cloud, in mm,
 			NOTE this uses initial velocity of holes only;
 			this may not be quite right if electron signal is strong */
-    		/* difference in time between center and edge of charge cloud */
-    		dt = (int) (1.5f + setup->charge_cloud_size /
+			/* difference in time between center and edge of charge cloud */
+			dt = (int) (1.5f + setup->charge_cloud_size /
 			    (setup->step_time_calc * setup->initial_vel));
-    		if (setup->initial_vel < 0.00001f) dt = 0;
-    		TELL_CHATTY("Initial vel, size, dt = %f mm/ns, %f mm, %d steps\n",
+			if (setup->initial_vel < 0.00001f) dt = 0;
+			TELL_CHATTY("Initial vel, size, dt = %f mm/ns, %f mm, %d steps\n",
 			    setup->initial_vel, setup->charge_cloud_size, dt);
-    		if (setup->use_diffusion || setup->use_acceleration || setup->use_repulsion) {
+			if (setup->use_diffusion || setup->use_acceleration || setup->use_repulsion) {
 				dt = (int) (1.5f + setup->final_charge_size /
 			    (setup->step_time_calc * setup->final_vel));
 				TELL_CHATTY("  Final vel, size, dt = %f mm/ns, %f mm, %d steps\n",
 		    	setup->final_vel, setup->final_charge_size, dt);
-      		}
-      		if (dt > 1) {
+			}
+			if (dt > 1) {
 				/* Gaussian */
 				w = ((float) dt) / 2.355;
 				l = dt/10;     // use l to speed up convolution of waveform with gaussian;
