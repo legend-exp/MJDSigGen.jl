@@ -489,7 +489,7 @@ static int setup_efield(MJD_Siggen_Setup *setup){
   int    i, j, lineno;
   float  v, eabs, er, ez;
   cyl_pt cyl, **efld;
-  float f = 0;
+  float f = 1;
 
   char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_name);
   if ((fp = fopen(field_file_name, "r")) == NULL){
@@ -540,10 +540,10 @@ static int setup_efield(MJD_Siggen_Setup *setup){
     }
     cyl.phi = 0;
     if (outside_detector_cyl(cyl, setup)) continue;
-    if(cyl.r>(setup->xtal_radius-TL)) {
-		f = - 1./TL *(float)(cyl.r + setup->xtal_radius);
-		efld[i][j].r = f*er;
-	    efld[i][j].z = f*ez;
+    if(cyl.r>(setup->xtal_radius-2)) {
+		f = - 0.5 * (float)(cyl.r + setup->xtal_radius);
+		efld[i][j].r = (float)er * f;
+	    efld[i][j].z = (float)ez * f;
 	    efld[i][j].phi = 0;
 	} else {
 		efld[i][j].r = er;
