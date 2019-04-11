@@ -542,8 +542,8 @@ static int setup_efield(MJD_Siggen_Setup *setup){
     if (outside_detector_cyl(cyl, setup)) continue;
     if(cyl.r>(setup->xtal_radius-TL)) {
 		f = - 1./TL *(float)(cyl.r + setup->xtal_radius);
-		efld[i][j].r = er;
-	    efld[i][j].z = ez;
+		efld[i][j].r = f*er;
+	    efld[i][j].z = f*ez;
 	    efld[i][j].phi = 0;
 	} else {
 		efld[i][j].r = er;
