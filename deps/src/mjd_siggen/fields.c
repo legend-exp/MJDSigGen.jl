@@ -20,6 +20,7 @@
 #include "calc_signal.h"
 
 #define MAX_FNAME_LEN 512
+#define TL				2.0  // Transition layer thickness [mm]
 
 static int grid_weights(cyl_pt pt, cyl_int_pt ipt, float out[2][2], MJD_Siggen_Setup *setup);
 static cyl_pt efield(cyl_pt pt, cyl_int_pt ipt, MJD_Siggen_Setup *setup);
@@ -488,6 +489,7 @@ static int setup_efield(MJD_Siggen_Setup *setup){
   int    i, j, lineno;
   float  v, eabs, er, ez;
   cyl_pt cyl, **efld;
+  float f = 0;
 
   char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_name);
   if ((fp = fopen(field_file_name, "r")) == NULL){
@@ -538,8 +540,8 @@ static int setup_efield(MJD_Siggen_Setup *setup){
     }
     cyl.phi = 0;
     if (outside_detector_cyl(cyl, setup)) continue;
-    if(cyl.r>(setup->xtal_radius-2)) {
-		double f = -0.5*(cyl.r + setup->xtal_radius);
+    if(cyl.r>(setup->xtal_radius-TL)) {
+		f = -1/TL * (cyl.r + setup->xtal_radius);
 		efld[i][j].r = er *f ;
 	    efld[i][j].z = ez *f;
 	    efld[i][j].phi = 0;
