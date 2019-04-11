@@ -548,7 +548,8 @@ static int setup_efield(MJD_Siggen_Setup *setup){
 	    efld[i][j].z = ez;
 	    efld[i][j].phi = 0;
   	}      
-
+  }
+  
   TELL_NORMAL("Done reading %d lines of electric field data\n", lineno);
   fclose(fp);
 
