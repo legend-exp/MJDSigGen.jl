@@ -538,7 +538,7 @@ static int setup_efield(MJD_Siggen_Setup *setup){
     }
     cyl.phi = 0;
     if (outside_detector_cyl(cyl, setup)) continue;
-    if(cyl.r>(setup->xtal_radius-2)) {
+    if(cyl.r>(setup->xtal_radius-TL)) {
 		double f = -0.5*(cyl.r + setup->xtal_radius);
 		efld[i][j].r = er *f ;
 	    efld[i][j].z = ez *f;
@@ -547,7 +547,7 @@ static int setup_efield(MJD_Siggen_Setup *setup){
 		efld[i][j].r = er;
 	    efld[i][j].z = ez;
 	    efld[i][j].phi = 0;
-  	}      
+  }      
 
   TELL_NORMAL("Done reading %d lines of electric field data\n", lineno);
   fclose(fp);
