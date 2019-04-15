@@ -143,7 +143,7 @@ function instant_vel!(vel::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setu
 end
 
 instant_vel(setup::Struct_MJD_Siggen_Setup, t::Symbol) =
-    drift_path!(zeros(Float32, instant_vel_len(setup, t), 3), setup, t)
+    instant_vel!(zeros(Float32, instant_vel_len(setup, t), 3), setup, t)
 
 function outside_detector(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
     pt = Struct_point(location[1], location[2], location[3])
