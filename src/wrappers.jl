@@ -101,6 +101,50 @@ drift_path(setup::Struct_MJD_Siggen_Setup, t::Symbol) =
     drift_path!(zeros(Float32, drift_path_len(setup, t), 3), setup, t)
 
 
+function _instant_vel_ptr(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+    if t == :e
+		setup.instant_vel_h
+    elseif t == :h
+        setup.instant_vel_h
+    else
+        error("Charge carrier type must be :e or :h")
+    end
+end
+
+
+function instant_vel_len(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+    vel_ptr = _instant_vel_ptr(setup, t)
+    n = setup.time_steps_calc
+    @inbounds for i in 1:n
+        pt = unsafe_load(path_ptr, i)
+        if pt == Struct_point()
+            return i - 1
+        end
+    end
+    return n
+end
+
+
+function instant_vel!(vel::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setup, t::Symbol)
+    (size(vel, 2) < 2) && throw(BoundsError())
+
+    vel_ptr = _instant_vel_ptr(setup, t)
+    n = min(size(vel, 1), setup.time_steps_calc)
+    vel_idxs = axes(vel, 1)
+    @inbounds for i in 1:n
+        pt = unsafe_load(vel_ptr, i)
+        j = vel_idxs[i]
+        vel[j, 1] = pt.x
+        vel[j, 2] = pt.y
+        vel[j, 3] = pt.z
+    end
+
+	vel 
+end
+
+instant_vel(setup::Struct_MJD_Siggen_Setup, t::Symbol) =
+    drift_path!(zeros(Float32, instant_vel_len(setup, t), 3), setup, t)
+
 function outside_detector(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
     pt = Struct_point(location[1], location[2], location[3])
 
