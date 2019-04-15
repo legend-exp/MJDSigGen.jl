@@ -56,7 +56,7 @@ get_signal!(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}) =
     get_signal!(zeros(Float32, setup.ntsteps_out), setup, location)
 
 
-function _drift_path_ptr(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+function _drift_path_ptr(setup, t::Symbol)
     if t == :e
         setup.dpath_e
     elseif t == :h
@@ -67,7 +67,7 @@ function _drift_path_ptr(setup::Struct_MJD_Siggen_Setup, t::Symbol)
 end
 
 
-function drift_path_len(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+function drift_path_len(setup, t::Symbol)
     path_ptr = _drift_path_ptr(setup, t)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
@@ -80,7 +80,7 @@ function drift_path_len(setup::Struct_MJD_Siggen_Setup, t::Symbol)
 end
 
 
-function drift_path!(path::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setup, t::Symbol)
+function drift_path!(path, setup, t::Symbol)
     (size(path, 2) < 2) && throw(BoundsError())
 
     path_ptr = _drift_path_ptr(setup, t)
@@ -97,11 +97,11 @@ function drift_path!(path::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setu
     path
 end
 
-drift_path(setup::Struct_MJD_Siggen_Setup, t::Symbol) =
+drift_path(setup, t::Symbol) =
     drift_path!(zeros(Float32, drift_path_len(setup, t), 3), setup, t)
 
 
-function _instant_vel_ptr(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+function _instant_vel_ptr(setup, t::Symbol)
     if t == :e
 		setup.instant_vel_h
     elseif t == :h
@@ -112,11 +112,11 @@ function _instant_vel_ptr(setup::Struct_MJD_Siggen_Setup, t::Symbol)
 end
 
 
-function instant_vel_len(setup::Struct_MJD_Siggen_Setup, t::Symbol)
+function instant_vel_len(setup, t::Symbol)
     vel_ptr = _instant_vel_ptr(setup, t)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
-        pt = unsafe_load(path_ptr, i)
+        pt = unsafe_load(vel_ptr, i)
         if pt == Struct_point()
             return i - 1
         end
@@ -125,7 +125,7 @@ function instant_vel_len(setup::Struct_MJD_Siggen_Setup, t::Symbol)
 end
 
 
-function instant_vel!(vel::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setup, t::Symbol)
+function instant_vel!(vel, setup, t::Symbol)
     (size(vel, 2) < 2) && throw(BoundsError())
 
     vel_ptr = _instant_vel_ptr(setup, t)
@@ -142,10 +142,10 @@ function instant_vel!(vel::DenseArray{Float32, 2}, setup::Struct_MJD_Siggen_Setu
 	vel 
 end
 
-instant_vel(setup::Struct_MJD_Siggen_Setup, t::Symbol) =
+instant_vel(setup, t::Symbol) =
     instant_vel!(zeros(Float32, instant_vel_len(setup, t), 3), setup, t)
 
-function outside_detector(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+function outside_detector(setup, location::NTuple{3})
     pt = Struct_point(location[1], location[2], location[3])
 
     r = ccall(
