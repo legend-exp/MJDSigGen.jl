@@ -168,7 +168,6 @@ end
 
 
 function instant_charge_size!(cloudSize, setup, t::Symbol)
-    (size(cloudSize,1) < 2) && throw(BoundsError())
 
     size_ptr = _instant_charge_size_ptr(setup, t)
     n = min(size(cloudSize), setup.time_steps_calc)
