@@ -461,6 +461,14 @@ int signal_calc_finalize(MJD_Siggen_Setup *setup){
     free(setup->dpath_e);
     setup->dpath_e = NULL;
   }
+  if (setup->instant_vel_h != NULL) {
+    free(setup->instant_vel_h);
+    setup->instant_vel_h = NULL;
+  }
+  if (setup->instant_vel_e != NULL) {
+    free(setup->instant_vel_e);
+    setup->instant_vel_e = NULL;
+  }
   return 0;
 }
 
