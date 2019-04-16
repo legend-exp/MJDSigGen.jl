@@ -167,19 +167,19 @@ function instant_charge_size_len(setup, t::Symbol)
 end
 
 
-function instant_charge_size!(size, setup, t::Symbol)
-    (size(size, 2) < 2) && throw(BoundsError())
+function instant_charge_size!(cloudSize, setup, t::Symbol)
+    (size(cloudSize, 2) < 2) && throw(BoundsError())
 
     size_ptr = _instant_charge_size_ptr(setup, t)
-    n = min(size(size, 1), setup.time_steps_calc)
-    size_idxs = axes(size, 1)
+    n = min(size(cloudSize), setup.time_steps_calc)
+    size_idxs = axes(cloudSize, 1)
     @inbounds for i in 1:n
         pt = unsafe_load(size_ptr, i)
         j = size_idxs[i]
-        size[j] = pt
+        cloudSize[j] = pt
     end
 
-	size
+	cloudSize
 end
 
 instant_charge_size(setup, t::Symbol) =
