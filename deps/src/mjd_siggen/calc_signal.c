@@ -98,8 +98,8 @@ int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
 		error("Path malloc failed\n");
 		return -1;
 	}
-	if ((setup->instant_size_e = (float *) malloc(setup->time_steps_calc*sizeof(float))) == NULL ||
-		(setup->instant_size_h = (float *) malloc(setup->time_steps_calc*sizeof(float))) == NULL) {
+	if ((setup->instant_charge_size_e = (float *) malloc(setup->time_steps_calc*sizeof(float))) == NULL ||
+		(setup->instant_charge_size_h = (float *) malloc(setup->time_steps_calc*sizeof(float))) == NULL) {
 		error("Size malloc failed\n");
 		return -1;
 	}
@@ -142,8 +142,8 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
 	memset(setup->dpath_e, 0, tsteps*sizeof(point));
 	memset(setup->dpath_h, 0, tsteps*sizeof(point));
 	memset(setup->instant_vel_h, 0, tsteps*sizeof(point));
-	memset(setup->instant_size_e, 0, tsteps*sizeof(float));
-	memset(setup->instant_size_h, 0, tsteps*sizeof(float));
+	memset(setup->instant_charge_size_e, 0, tsteps*sizeof(float));
+	memset(setup->instant_charge_size_h, 0, tsteps*sizeof(float));
 	
 	err = make_signal(pt, signal, ELECTRON_CHARGE, setup);
 	err = make_signal(pt, signal, HOLE_CHARGE, setup);
@@ -258,7 +258,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 			setup->instant_vel_h[t].x = v.x;
 			setup->instant_vel_h[t].y = v.y;
 			setup->instant_vel_h[t].z = v.z;
-			setup->instant_size_h[t]  = setup->final_charge_size;
+			setup->instant_charge_size_h[t]  = setup->final_charge_size;
 		} else {
 			setup->dpath_e[t] = new_pt;
 		}
@@ -472,13 +472,13 @@ int signal_calc_finalize(MJD_Siggen_Setup *setup){
     free(setup->instant_vel_e);
     setup->instant_vel_e = NULL;
   }
-  if (setup->instant_size_e != NULL) {
-    free(setup->instant_size_e);
-    setup->instant_size_e = NULL;
+  if (setup->instant_charge_size_e != NULL) {
+    free(setup->instant_charge_size_e);
+    setup->instant_charge_size_e = NULL;
   }
-  if (setup->instant_size_h != NULL) {
-    free(setup->instant_size_h);
-    setup->instant_size_h = NULL;
+  if (setup->instant_charge_size_h != NULL) {
+    free(setup->instant_charge_size_h);
+    setup->instant_charge_size_h = NULL;
   }
   return 0;
 }
