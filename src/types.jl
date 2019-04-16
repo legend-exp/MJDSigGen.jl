@@ -141,7 +141,7 @@ mutable struct Struct_MJD_Siggen_Setup
     instant_vel_e::Ptr{Struct_point}
     instant_vel_h::Ptr{Struct_point}
     instant_charge_size_e::Ptr{Cfloat}
-    instant_charge_size_h::Ptr{CFloat}
+    instant_charge_size_h::Ptr{Cfloat}
     initial_vel::Cfloat
     final_vel::Cfloat
     dv_dE::Cfloat
