@@ -168,7 +168,7 @@ end
 
 
 function instant_charge_size!(cloudSize, setup, t::Symbol)
-    (size(cloudSize, 2) < 2) && throw(BoundsError())
+    (size(cloudSize,1) < 2) && throw(BoundsError())
 
     size_ptr = _instant_charge_size_ptr(setup, t)
     n = min(size(cloudSize), setup.time_steps_calc)
@@ -183,7 +183,7 @@ function instant_charge_size!(cloudSize, setup, t::Symbol)
 end
 
 instant_charge_size(setup, t::Symbol) =
-    instant_charge_size!(zeros(Float32, instant_charge_size_len(setup, t), 1), setup, t)
+    instant_charge_size!(zeros(Float32, instant_charge_size_len(setup, t)), setup, t)
 
 function outside_detector(setup, location::NTuple{3})
     pt = Struct_point(location[1], location[2], location[3])
