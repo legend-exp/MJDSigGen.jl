@@ -127,6 +127,7 @@ typedef struct {
   // data for calc_signal.c
   point *dpath_e, *dpath_h;      // electron and hole drift paths
   point *instant_vel_h;          // instant vel of holes
+  point *instant_vel_e;          // instant vel of electrons
   float initial_vel, final_vel;  // initial and final drift velocities for charges collected to PC
   float dv_dE;     // derivative of drift velocity with field ((mm/ns) / (V/cm))
   float v_over_E;  // ratio of drift velocity to field ((mm/ns) / (V/cm))
