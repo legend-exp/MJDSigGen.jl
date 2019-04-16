@@ -94,6 +94,7 @@ int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
 	
 	if ((setup->dpath_e = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL ||
 		(setup->dpath_h = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL ||
+		(setup->instant_vel_e = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL ||
 		(setup->instant_vel_h = (point *) malloc(setup->time_steps_calc*sizeof(point))) == NULL) {
 		error("Path malloc failed\n");
 		return -1;
@@ -136,6 +137,7 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
 	
 	memset(setup->dpath_e, 0, tsteps*sizeof(point));
 	memset(setup->dpath_h, 0, tsteps*sizeof(point));
+	memset(setup->instant_vel_e, 0, tsteps*sizeof(point));
 	memset(setup->instant_vel_h, 0, tsteps*sizeof(point));
 	
 	err = make_signal(pt, signal, ELECTRON_CHARGE, setup);
@@ -253,6 +255,9 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 			setup->instant_vel_h[t].z = v.z;
 		} else {
 			setup->dpath_e[t] = new_pt;
+			setup->instant_vel_e[t].x = v.x;
+			setup->instant_vel_e[t].y = v.y;
+			setup->instant_vel_e[t].z = v.z;
 		}
     	
 		if (collect2pc) {
