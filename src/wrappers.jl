@@ -103,7 +103,7 @@ drift_path(setup, t::Symbol) =
 
 function _instant_vel_ptr(setup, t::Symbol)
     if t == :e
-		setup.instant_vel_h
+		setup.instant_vel_e
     elseif t == :h
         setup.instant_vel_h
     else
