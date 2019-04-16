@@ -146,19 +146,19 @@ instant_vel(setup, t::Symbol) =
     instant_vel!(zeros(Float32, instant_vel_len(setup, t), 3), setup, t)
 
 
-function _instant_size_ptr(setup, t::Symbol)
+function _instant_charge_size_ptr(setup, t::Symbol)
     if t == :e
-		setup.instant_size_e
+		setup.instant_charge_size_e
     elseif t == :h
-        setup.instant_size_h
+        setup.instant_charge_size_h
     else
         error("Charge carrier type must be :e or :h")
     end
 end
 
 
-function instant_size_len(setup, t::Symbol)
-    size_ptr = _instant_size_ptr(setup, t)
+function instant_charge_size_len(setup, t::Symbol)
+    size_ptr = _instant_charge_size_ptr(setup, t)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
         pt = unsafe_load(size_ptr, i)
@@ -167,10 +167,10 @@ function instant_size_len(setup, t::Symbol)
 end
 
 
-function instant_size!(size, setup, t::Symbol)
+function instant_charge_size!(size, setup, t::Symbol)
     (size(size, 2) < 2) && throw(BoundsError())
 
-    size_ptr = _instant_size_ptr(setup, t)
+    size_ptr = _instant_charge_size_ptr(setup, t)
     n = min(size(size, 1), setup.time_steps_calc)
     size_idxs = axes(size, 1)
     @inbounds for i in 1:n
@@ -182,8 +182,8 @@ function instant_size!(size, setup, t::Symbol)
 	size
 end
 
-instant_size(setup, t::Symbol) =
-    instant_size!(zeros(Float32, instant_size_len(setup, t), 1), setup, t)
+instant_charge_size(setup, t::Symbol) =
+    instant_charge_size!(zeros(Float32, instant_charge_size_len(setup, t), 1), setup, t)
 
 function outside_detector(setup, location::NTuple{3})
     pt = Struct_point(location[1], location[2], location[3])
