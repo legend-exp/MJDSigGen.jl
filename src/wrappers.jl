@@ -244,3 +244,53 @@ function fieldgen(config_filename::AbstractString)
 
     run(`$fieldgen_exe -c $config_filename`)
 end
+
+
+function get_drift_velocity(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}, t::Symbol)
+	if t==:e
+		q = -1;
+	elseif t==:h
+		q = +1;
+	else
+		error("Charge carrier type must be :e or :h")
+	end
+
+    pt	= Struct_point(location[1], location[2], location[3])
+	vel	= Ref(Struct_point(0, 0, 0))
+
+    ccall(
+        @sgsym(:drift_velocity), Cint,
+        (Struct_point, Float32, Ptr{Struct_point}, Ptr{Struct_MJD_Siggen_Setup}),
+        pt, q, vel, Ref(setup)
+    ) < 0 && error("Point not in crystal or has no field: $pt")
+
+	#asd = unsafe_load(vel);
+    return vel.x;
+	
+	
+end
+
+function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}, t::Symbol, Eadd_cart::NTuple{3})
+	if t==:e
+		q = -1;
+	elseif t==:h
+		q = +1;
+	else
+		error("Charge carrier type must be :e or :h")
+	end
+	
+    pt	= Struct_point(location[1], location[2], location[3])
+	vel	= Ref(Struct_point(0, 0, 0))
+	Er, Eϕ, Ez = cart2cyl(Eadd_cart ...);
+	Eadd = Struct_cyl_pt(Er, Eϕ, Ez);	
+
+    ccall(
+        @sgsym(:drift_velocity_w_Eadd), Cint,
+        (Struct_point, Float32, Ptr{Struct_point}, Ptr{Struct_MJD_Siggen_Setup}, Struct_cyl_pt),
+        pt, q, vel, Ref(setup), Eadd
+    ) < 0 && error("Point not in crystal or has no field: $pt")
+
+	#asd = unsafe_load(vel);
+    return vel.x;
+	
+

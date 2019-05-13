@@ -225,6 +225,89 @@ static cyl_pt efield(cyl_pt pt, cyl_int_pt ipt, MJD_Siggen_Setup *setup){
 }
 
 
+/* TC: get drift_velocity with linear superposition of 2 fields:
+		1. Detector field, E
+		2. Charge cloud field, Eadd
+*/
+int drift_velocity_w_Eadd(point pt, float q, vector *velo, MJD_Siggen_Setup *setup, cyl_pt Eadd)
+{
+  point  cart_en;
+  cyl_pt e, en, cyl;
+  cyl_int_pt ipt;
+  int   i, sign;
+  float abse, absv, f, a, b, c;
+  float bp, cp, en4, en6;
+  struct velocity_lookup *v_lookup1, *v_lookup2;
+
+  /*  DCR: replaced this with faster code below, saves calls to atan and tan
+  cyl = cart_to_cyl(pt);
+  if (nearest_field_grid_index(cyl, &ipt, setup) < 0) return -1;
+  e = efield(cyl, ipt, setup);
+  abse = vector_norm_cyl(e, &en);
+  en.phi = cyl.phi;
+  cart_en = cyl_to_cart(en);
+  */
+  cyl.r = sqrt(pt.x*pt.x + pt.y*pt.y);
+  cyl.z = pt.z;
+  cyl.phi = 0;
+  if (nearest_field_grid_index(cyl, &ipt, setup) < 0) return -1;
+  e = efield(cyl, ipt, setup);
+
+  // Add additional Efield
+  e.r	+= Eadd.r;
+  e.phi	+= Eadd.phi;
+  e.z	+= Eadd.z;
+  
+  abse = vector_norm_cyl(e, &en);
+  if (cyl.r > 0.001) {
+    cart_en.x = en.r * pt.x/cyl.r;
+    cart_en.y = en.r * pt.y/cyl.r;
+  } else {
+    cart_en.x = cart_en.y = 0;
+  }
+  cart_en.z = en.z;
+
+  /* find location in table to interpolate from */
+  for (i = 0; i < setup->v_lookup_len - 2 && abse > setup->v_lookup[i+1].e; i++);
+  v_lookup1 = setup->v_lookup + i;
+  v_lookup2 = setup->v_lookup + i+1;
+  f = (abse - v_lookup1->e)/(v_lookup2->e - v_lookup1->e);
+  if (q > 0){
+    a = (v_lookup2->ha - v_lookup1->ha)*f+v_lookup1->ha;
+    b = (v_lookup2->hb- v_lookup1->hb)*f+v_lookup1->hb;
+    c = (v_lookup2->hc - v_lookup1->hc)*f+v_lookup1->hc;
+    bp = (v_lookup2->hbp- v_lookup1->hbp)*f+v_lookup1->hbp;
+    cp = (v_lookup2->hcp - v_lookup1->hcp)*f+v_lookup1->hcp;
+    setup->dv_dE = (v_lookup2->h100 - v_lookup1->h100)/(v_lookup2->e - v_lookup1->e);
+  }else{
+    a = (v_lookup2->ea - v_lookup1->ea)*f+v_lookup1->ea;
+    b = (v_lookup2->eb- v_lookup1->eb)*f+v_lookup1->eb;
+    c = (v_lookup2->ec - v_lookup1->ec)*f+v_lookup1->ec;
+    bp = (v_lookup2->ebp- v_lookup1->ebp)*f+v_lookup1->ebp;
+    cp = (v_lookup2->ecp - v_lookup1->ecp)*f+v_lookup1->ecp;
+    setup->dv_dE = (v_lookup2->e100 - v_lookup1->e100)/(v_lookup2->e - v_lookup1->e);
+  }
+  /* velocity can vary from the direction of the el. field
+     due to effect of crystal axes */
+#define POW4(x) ((x)*(x)*(x)*(x))
+#define POW6(x) ((x)*(x)*(x)*(x)*(x)*(x))
+  en4 = POW4(cart_en.x) + POW4(cart_en.y) + POW4(cart_en.z);
+  en6 = POW6(cart_en.x) + POW6(cart_en.y) + POW6(cart_en.z);
+  absv = a + b*en4 + c*en6;
+  sign = (q < 0 ? -1 : 1);
+  setup->v_over_E = absv / abse;
+  velo->x = sign*cart_en.x*(absv+bp*4*(cart_en.x*cart_en.x - en4)
+			    + cp*6*(POW4(cart_en.x) - en6));
+  velo->y = sign*cart_en.y*(absv+bp*4*(cart_en.y*cart_en.y - en4)
+			    + cp*6*(POW4(cart_en.y) - en6));
+  velo->z = sign*cart_en.z*(absv+bp*4*(cart_en.z*cart_en.z - en4)
+			    + cp*6*(POW4(cart_en.z) - en6));
+#undef POW4
+#undef POW6
+  return 0;
+}
+
+
 /* Find weights for 8 voxel corner points around pt for e/wp field*/
 /* DCR: modified to work for both interpolation and extrapolation */
 static int grid_weights(cyl_pt pt, cyl_int_pt ipt, float out[2][2],
