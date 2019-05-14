@@ -293,4 +293,4 @@ function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTu
 	#asd = unsafe_load(vel);
     return vel.x;
 	
-
+end
