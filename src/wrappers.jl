@@ -282,11 +282,11 @@ function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTu
     pt	= Struct_point(location[1], location[2], location[3])
 	vel	= Ref(Struct_point(0, 0, 0))
 	Er, Eϕ, Ez = cart2cyl(Eadd_cart ...);
-	Eadd = Struct_cyl_pt(Er, Eϕ, Ez);
 	if(Eadd_cart[1]<0)
-		Eadd.r *=-1;
-		Eadd.phi = 0;
+		Er =-Er;
+		Eϕ = 0;
 	end	
+	Eadd = Struct_cyl_pt(Er, Eϕ, Ez);
 
     ccall(
         @sgsym(:drift_velocity_w_Eadd), Cint,
