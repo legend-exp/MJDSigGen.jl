@@ -55,6 +55,8 @@ int drift_velocity(point pt, float q, vector *velocity, MJD_Siggen_Setup *setup)
 */
 int drift_velocity_w_Eadd(point pt, float q, vector *velo, MJD_Siggen_Setup *setup, cyl_pt Eadd);
 
+/* TC: get drift_velocity from Efield */
+int drift_velocity_from_Efield(point pt, float q, vector *velo, MJD_Siggen_Setup *setup, cyl_pt Efield)
 
 int read_fields(MJD_Siggen_Setup *setup);
 

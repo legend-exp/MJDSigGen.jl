@@ -298,3 +298,33 @@ function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTu
     return vel.x;
 	
 end
+
+
+function get_drift_velocity_from_Efield(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}, t::Symbol, Efield_cart::NTuple{3})
+	if t==:e
+		q = -1;
+	elseif t==:h
+		q = +1;
+	else
+		error("Charge carrier type must be :e or :h")
+	end
+	
+    pt	= Struct_point(location[1], location[2], location[3])
+	vel	= Ref(Struct_point(0, 0, 0))
+	Er, Eϕ, Ez = cart2cyl(Efield_cart ...);
+	if(Efield_cart[1]<0)
+		Er =-Er;
+		Eϕ = 0;
+	end	
+	Efield = Struct_cyl_pt(Er, Eϕ, Ez);
+
+    ccall(
+        @sgsym(:drift_velocity_from_Efield), Cint,
+        (Struct_point, Float32, Ptr{Struct_point}, Ptr{Struct_MJD_Siggen_Setup}, Struct_cyl_pt),
+        pt, q, vel, Ref(setup), Efield
+    ) < 0 && error("Point not in crystal or has no field: $pt")
+
+	#asd = unsafe_load(vel);
+    return vel.x;
+	
+end
