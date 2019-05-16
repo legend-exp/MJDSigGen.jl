@@ -324,7 +324,6 @@ function get_drift_velocity_from_Efield(setup::Struct_MJD_Siggen_Setup, location
         pt, q, vel, Ref(setup), Efield
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
-	#asd = unsafe_load(vel);
-    return vel.x;
+    return Tuple(vel.x);
 	
 end
