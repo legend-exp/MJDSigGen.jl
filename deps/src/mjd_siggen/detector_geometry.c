@@ -57,8 +57,9 @@ int outside_detector(point pt, MJD_Siggen_Setup *setup){
 /* check inner taper of hole */
   if (setup->inner_taper_length > 0 &&
       z > setup->zmax - setup->inner_taper_length &&
-      r < setup->rmax - ((z - setup->zmax + setup->inner_taper_length) *
-                         setup->inner_taper_width / setup->inner_taper_length)) return 1;
+      r > setup->rmax + ((z - setup->zmax + setup->inner_taper_length) *
+                         (setup->rmax-setup->inner_taper_width-setup->hole_radius) /
+                          setup->inner_taper_length)) return 1;
 
 
   return 0;
@@ -102,11 +103,12 @@ int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
       z > setup->zmax - setup->outer_taper_length &&
       r > setup->rmax - ((z - setup->zmax + setup->outer_taper_length) *
                          setup->outer_taper_width / setup->outer_taper_length)) return 1;
-  /* check inner taper of hole */
+/* check inner taper of hole */
   if (setup->inner_taper_length > 0 &&
       z > setup->zmax - setup->inner_taper_length &&
-      r < setup->rmax - ((z - setup->zmax + setup->inner_taper_length) *
-                         setup->inner_taper_width / setup->inner_taper_length)) return 1;
+      r > setup->rmax + ((z - setup->zmax + setup->inner_taper_length) *
+                         (setup->rmax-setup->inner_taper_width-setup->hole_radius) /
+                          setup->inner_taper_length)) return 1;
 
   return 0;
 }
