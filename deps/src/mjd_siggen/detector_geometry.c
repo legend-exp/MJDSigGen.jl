@@ -65,7 +65,7 @@ if (setup->inner_taper_length > 0 &&
 }
 
 int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
-  float r, z, br, a;
+  float r, z, br, bbr, a;
 
   z = pt.z;
   if (z >= setup->zmax || z < 0) return 1;
@@ -73,8 +73,11 @@ int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
   r = pt.r;
   if (r > setup->rmax) return 1;
   br = setup->top_bullet_radius;
+  bbr = setup->bottom_bullet_radius; 
   if (z > setup->zmax - br &&
       r > (setup->rmax - br) + sqrt(SQ(br)- SQ(z-(setup->zmax - br)))) return 1;
+  if (z < bbr &&
+      r > (setup->wrap_around_radius + 2) + sqrt(SQ(bbr)- SQ(bbr-z))) return 1;
   if (setup->pc_radius > 0 &&
       z <= setup->pc_length && r <= setup->pc_radius) {
     if (!setup->bulletize_PC) return 1;
