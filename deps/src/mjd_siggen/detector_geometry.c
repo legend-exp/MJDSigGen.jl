@@ -28,7 +28,7 @@ int outside_detector(point pt, MJD_Siggen_Setup *setup){
   bbr= setup->bottom_bullet_radius;
   if (z > setup->zmax - br &&
       r > (setup->rmax - br) + sqrt(SQ(br)- SQ(z-(setup->zmax - br)))) return 1;
-  if (z < bbr && r > (setup->wrap_around_radius + 2) &&
+  if (z < sqrt(SQ(bbr)-SQ(setup->wrap_around_radius/2)) &&
       r > (setup->rmax - br) + sqrt(SQ(bbr)- SQ(bbr-z))) return 1;
   if (setup->pc_radius > 0 &&
       z <= setup->pc_length && r <= setup->pc_radius) {
@@ -79,7 +79,7 @@ int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
   bbr = setup->bottom_bullet_radius; 
   if (z > setup->zmax - br &&
       r > (setup->rmax - br) + sqrt(SQ(br)- SQ(z-(setup->zmax - br)))) return 1;
-  if (z < bbr && r > (setup->wrap_around_radius + 2) &&
+  if (z < sqrt(SQ(bbr)-SQ(setup->wrap_around_radius/2)) &&
       r > (setup->rmax - br) + sqrt(SQ(bbr)- SQ(bbr-z))) return 1;
   if (setup->pc_radius > 0 &&
       z <= setup->pc_length && r <= setup->pc_radius) {
