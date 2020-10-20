@@ -1,5 +1,5 @@
 name = "MJDSigGen"
-uuid = "d3f1610b-2cc8-4877-9c4b-1cc92a82e4fd"
+uuid = "0b925020-e659-485c-98dd-189633cb4be4"
 version = "0.1.0"
 
 [deps]
