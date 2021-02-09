@@ -4,15 +4,15 @@ using Test, MJDSigGen, DelimitedFiles
     mktempdir() do scratchdir
         cp(joinpath("..", "examples"), joinpath(scratchdir, "examples"))
 
-        scratchdir = abspath(joinpath(dirname(pathof(MJDSigGen)), "../"))
+        # scratchdir = abspath(joinpath(dirname(pathof(MJDSigGen)), "../"))
 
         config_file_rel_path = joinpath("examples", "config", "example.config")
         config_file = joinpath(scratchdir, config_file_rel_path)
 
         # Run fieldgen in scratchdir, as it writes "undepleted.txt" into current directory
-        # cd(scratchdir) do
-        #     fieldgen(config_file_rel_path)
-        # end
+        cd(scratchdir) do
+            fieldgen(config_file_rel_path)
+        end
 
         @testset "read_config" begin
             setup1 = SigGenSetup()
