@@ -148,7 +148,11 @@ mutable struct SigGenSetup
     v_over_E::Cfloat
     final_charge_size::Cdouble
 
-    SigGenSetup() = new()
+    function SigGenSetup()
+        s = new()
+        fill!(unsafe_wrap(Array, Ptr{UInt8}(pointer_from_objref(s)), sizeof(s)), 0)
+        return s
+    end
 end
 
 function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
@@ -166,6 +170,10 @@ end
 function Base.getproperty(setup::SigGenSetup, sym::Symbol)
     if sym == :config_name || sym == :drift_name || sym == :field_name || sym == :wp_name
         return tup2str(getfield(setup, sym))
+    elseif sym == :dpath_e || sym == :dpath_h
+        ptr = getfield(setup, sym)
+        path = reinterpret(Cfloat, unsafe_wrap(Array, ptr, setup.time_steps_calc))
+        return transpose(reshape(path, (3, setup.time_steps_calc)))
     else
         return getfield(setup, sym)
     end
