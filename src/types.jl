@@ -61,7 +61,7 @@ mutable struct Struct_velocity_lookup
 end
 
 
-mutable struct Struct_MJD_Siggen_Setup
+mutable struct SigGenSetup
     # general
     verbosity::Cint
 
@@ -148,9 +148,25 @@ mutable struct Struct_MJD_Siggen_Setup
     v_over_E::Cfloat
     final_charge_size::Cdouble
 
-    Struct_MJD_Siggen_Setup() = begin
-        x = new()
-        fill!(unsafe_wrap(Array, Ptr{UInt8}(pointer_from_objref(x)), sizeof(x)), 0)
-        x
+    SigGenSetup() = new()
+end
+
+function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
+    out = Vector{UInt8}(undef, N)
+
+    for i in 1:N
+        c = @inbounds tup[i]
+        c == 0 && (resize!(out, i-1); break)
+        @inbounds out[i] = tup[i]
+    end
+
+    return String(out)
+end
+
+function Base.getproperty(setup::SigGenSetup, sym::Symbol)
+    if sym == :config_name || sym == :drift_name || sym == :field_name || sym == :wp_name
+        return tup2str(getfield(setup, sym))
+    else
+        return getfield(setup, sym)
     end
 end

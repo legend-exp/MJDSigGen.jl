@@ -19,9 +19,11 @@ macro sgsym(func)
     :(($(esc(func)), libmjd_siggen))
 end
 
+import Base
+
+export SigGenSetup, read_config!, read_config, fieldgen, read_fields
 
 using DelimitedFiles
-
 
 include("types.jl")
 include("util.jl")

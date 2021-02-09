@@ -5,3 +5,6 @@
 build.log
 
 Manifest.toml
+
+undepleted.txt
+examples/fields

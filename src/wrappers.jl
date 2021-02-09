@@ -1,22 +1,22 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-function read_config!(setup::Struct_MJD_Siggen_Setup, config_filename::AbstractString)
+function read_config!(setup::SigGenSetup, config_filename::AbstractString)
     ccall(
         @sgsym(:read_config), Cint,
-        (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
+        (Cstring, Ptr{SigGenSetup}),
         config_filename, Ref(setup)
     ) != 0 && error("read_config failed.")
     setup
 end
 
 read_config(config_filename::AbstractString) =
-    read_config!(Struct_MJD_Siggen_Setup(), config_filename)
+    read_config!(SigGenSetup(), config_filename)
 
 
-function signal_calc_init!(setup::Struct_MJD_Siggen_Setup, config_filename::AbstractString)
+function signal_calc_init!(setup::SigGenSetup, config_filename::AbstractString)
     ccall(
         @sgsym(:signal_calc_init), Cint,
-        (Cstring, Ptr{Struct_MJD_Siggen_Setup}),
+        (Cstring, Ptr{SigGenSetup}),
         config_filename, Ref(setup)
     ) != 0 && error("signal_calc_init failed.")
     finalizer(signal_calc_finalize!, setup)
@@ -24,27 +24,27 @@ function signal_calc_init!(setup::Struct_MJD_Siggen_Setup, config_filename::Abst
 end
 
 signal_calc_init(config_filename::AbstractString) =
-    signal_calc_init!(Struct_MJD_Siggen_Setup(), config_filename)
+    signal_calc_init!(SigGenSetup(), config_filename)
 
 
-function signal_calc_finalize!(setup::Struct_MJD_Siggen_Setup)
+function signal_calc_finalize!(setup::SigGenSetup)
     ccall(
         @sgsym(:signal_calc_finalize), Cint,
-        (Ptr{Struct_MJD_Siggen_Setup},),
+        (Ptr{SigGenSetup},),
         Ref(setup)
     ) != 0 && error("signal_calc_finalize failed.")
     setup
 end
 
 
-function get_signal!(signal::DenseArray{Float32, 1}, setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, location::NTuple{3})
     (length(eachindex(signal)) < setup.ntsteps_out) && throw(BoundsError())
 
     pt = Struct_point(location[1], location[2], location[3])
 
     ccall(
         @sgsym(:get_signal), Cint,
-        (Struct_point, Ptr{Float32}, Ptr{Struct_MJD_Siggen_Setup}),
+        (Struct_point, Ptr{Float32}, Ptr{SigGenSetup}),
         pt, signal, Ref(setup)
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
@@ -52,11 +52,11 @@ function get_signal!(signal::DenseArray{Float32, 1}, setup::Struct_MJD_Siggen_Se
 end
 
 
-get_signal!(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}) =
+get_signal!(setup::SigGenSetup, location::NTuple{3}) =
     get_signal!(zeros(Float32, setup.ntsteps_out), setup, location)
 
 
-function _drift_path_ptr(setup, t::Symbol)
+function _drift_path_ptr(setup::SigGenSetup, t::Symbol)
     if t == :e
         setup.dpath_e
     elseif t == :h
@@ -67,7 +67,7 @@ function _drift_path_ptr(setup, t::Symbol)
 end
 
 
-function drift_path_len(setup, t::Symbol)
+function drift_path_len(setup::SigGenSetup, t::Symbol)
     path_ptr = _drift_path_ptr(setup, t)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
@@ -80,7 +80,7 @@ function drift_path_len(setup, t::Symbol)
 end
 
 
-function drift_path!(path, setup, t::Symbol)
+function drift_path!(path::DenseArray{Float32, 2}, setup::SigGenSetup, t::Symbol)
     (size(path, 2) < 2) && throw(BoundsError())
 
     path_ptr = _drift_path_ptr(setup, t)
@@ -101,7 +101,7 @@ drift_path(setup, t::Symbol) =
     drift_path!(zeros(Float32, drift_path_len(setup, t), 3), setup, t)
 
 
-function _instant_vel_ptr(setup, t::Symbol)
+function _instant_vel_ptr(setup::SigGenSetup, t::Symbol)
     if t == :e
 		setup.instant_vel_e
     elseif t == :h
@@ -112,7 +112,7 @@ function _instant_vel_ptr(setup, t::Symbol)
 end
 
 
-function instant_vel_len(setup, t::Symbol)
+function instant_vel_len(setup::SigGenSetup, t::Symbol)
     vel_ptr = _instant_vel_ptr(setup, t)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
@@ -190,7 +190,7 @@ function outside_detector(setup, location::NTuple{3})
 
     r = ccall(
         @sgsym(:outside_detector), Cint,
-        (Struct_point, Ptr{Struct_MJD_Siggen_Setup}),
+        (Struct_point, Ptr{SigGenSetup}),
         pt, Ref(setup)
     )
 
@@ -199,21 +199,21 @@ end
 
 
 """
-    nearest_field_grid_index(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+    nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3})
 
 Returns:
 * (:outside, i, j), if outside crystal or too far from a valid grid point
 * (:interpol, i, j, if interpolation is okay
 * (:extrapol, i, j), if we can find a point but extrapolation is needed
 """
-function nearest_field_grid_index(setup::Struct_MJD_Siggen_Setup, location::NTuple{3})
+function nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3})
     r, ϕ, z = cart2cyl(location ...)
     cyl_pos_val = Struct_cyl_pt(r, ϕ, z)
     cyl_idx_ref = Ref(Struct_cyl_int_pt(0, 0, 0))
 
     retcode = ccall(
         @sgsym(:nearest_field_grid_index), Cint,
-        (Struct_cyl_pt, Ptr{Struct_cyl_int_pt}, Ptr{Struct_MJD_Siggen_Setup}, ),
+        (Struct_cyl_pt, Ptr{Struct_cyl_int_pt}, Ptr{SigGenSetup}, ),
         cyl_pos_val, cyl_idx_ref, Ref(setup)
     )
 
@@ -236,11 +236,10 @@ end
 const fieldgen_exe = joinpath(dirname(@__FILE__), "..", "deps", "usr", "bin", "mjd_fieldgen")
 
 function fieldgen(config_filename::AbstractString)
-    setup = Struct_MJD_Siggen_Setup()
-    read_config!(setup, config_filename)
+    setup = read_config(config_filename)
 
-    mkpath(dirname(field_file_name(setup)))
-    mkpath(dirname(wpot_file_name(setup)))
+    mkpath(dirname(joinpath(dirname(config_filename), setup.field_name)))
+    mkpath(dirname(joinpath(dirname(config_filename), setup.wp_name)))
 
     run(`$fieldgen_exe -c $config_filename`)
 end
