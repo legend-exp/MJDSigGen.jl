@@ -1,12 +1,14 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
 function read_config!(setup::SigGenSetup, config_filename::AbstractString)
-    ccall(
+    result = ccall(
         @sgsym(:read_config), Cint,
         (Cstring, Ptr{SigGenSetup}),
         config_filename, Ref(setup)
-    ) != 0 && error("read_config failed.")
-    setup
+    )
+    
+    result != 0 && error("read_config failed.")
+    return setup
 end
 
 read_config(config_filename::AbstractString) =
@@ -14,13 +16,14 @@ read_config(config_filename::AbstractString) =
 
 
 function signal_calc_init!(setup::SigGenSetup, config_filename::AbstractString)
-    ccall(
+    result = ccall(
         @sgsym(:signal_calc_init), Cint,
         (Cstring, Ptr{SigGenSetup}),
         config_filename, Ref(setup)
-    ) != 0 && error("signal_calc_init failed.")
+    )
+    result != 0 && error("signal_calc_init failed.")
     finalizer(signal_calc_finalize!, setup)
-    setup
+    return setup
 end
 
 signal_calc_init(config_filename::AbstractString) =
@@ -28,27 +31,32 @@ signal_calc_init(config_filename::AbstractString) =
 
 
 function signal_calc_finalize!(setup::SigGenSetup)
-    ccall(
+    result = ccall(
         @sgsym(:signal_calc_finalize), Cint,
         (Ptr{SigGenSetup},),
         Ref(setup)
-    ) != 0 && error("signal_calc_finalize failed.")
-    setup
+    )
+    result != 0 && error("signal_calc_finalize failed.")
+    return setup
 end
 
 
 function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, location::NTuple{3})
-    (length(eachindex(signal)) < setup.ntsteps_out) && throw(BoundsError())
+    sl = length(signal)
+    nsteps = setup.ntsteps_out
+    sl != nsteps && throw(
+        BoundsError("signal length ($ls) must equal number of time steps ($nsteps)"))
 
     pt = Struct_point(location[1], location[2], location[3])
 
-    ccall(
+    result = ccall(
         @sgsym(:get_signal), Cint,
         (Struct_point, Ptr{Float32}, Ptr{SigGenSetup}),
         pt, signal, Ref(setup)
-    ) < 0 && error("Point not in crystal or has no field: $pt")
+    )
+    result < 0 && error("Point not in crystal or has no field: $pt")
 
-    signal
+    return signal
 end
 
 
@@ -245,7 +253,7 @@ function fieldgen(config_filename::AbstractString)
 end
 
 
-function get_drift_velocity(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}, t::Symbol)
+function get_drift_velocity(setup::SigGenSetup, location::NTuple{3}, t::Symbol)
 	if t==:e
 		q = -1;
 	elseif t==:h
@@ -259,7 +267,7 @@ function get_drift_velocity(setup::Struct_MJD_Siggen_Setup, location::NTuple{3},
 
     ccall(
         @sgsym(:drift_velocity), Cint,
-        (Struct_point, Float32, Ptr{Struct_point}, Ptr{Struct_MJD_Siggen_Setup}),
+        (Struct_point, Float32, Ptr{Struct_point}, Ptr{SigGenSetup}),
         pt, q, vel, Ref(setup)
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
@@ -269,7 +277,7 @@ function get_drift_velocity(setup::Struct_MJD_Siggen_Setup, location::NTuple{3},
 	
 end
 
-function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}, t::Symbol, Eadd_cart::NTuple{3})
+function get_drift_velocity_w_Eadd(setup::SigGenSetup, location::NTuple{3}, t::Symbol, Eadd_cart::NTuple{3})
 	if t==:e
 		q = -1;
 	elseif t==:h
@@ -289,7 +297,7 @@ function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTu
 
     ccall(
         @sgsym(:drift_velocity_w_Eadd), Cint,
-        (Struct_point, Float32, Ptr{Struct_point}, Ptr{Struct_MJD_Siggen_Setup}, Struct_cyl_pt),
+        (Struct_point, Float32, Ptr{Struct_point}, Ptr{SigGenSetup}, Struct_cyl_pt),
         pt, q, vel, Ref(setup), Eadd
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
@@ -299,7 +307,7 @@ function get_drift_velocity_w_Eadd(setup::Struct_MJD_Siggen_Setup, location::NTu
 end
 
 
-function get_drift_velocity_from_Efield(setup::Struct_MJD_Siggen_Setup, location::NTuple{3}, t::Symbol, Efield_cart::NTuple{3})
+function get_drift_velocity_from_Efield(setup::SigGenSetup, location::NTuple{3}, t::Symbol, Efield_cart::NTuple{3})
 	if t==:e
 		q = -1;
 	elseif t==:h
@@ -319,7 +327,7 @@ function get_drift_velocity_from_Efield(setup::Struct_MJD_Siggen_Setup, location
 
     ccall(
         @sgsym(:drift_velocity_from_Efield), Cint,
-        (Struct_point, Float32, Ptr{Struct_point}, Ptr{Struct_MJD_Siggen_Setup}, Struct_cyl_pt),
+        (Struct_point, Float32, Ptr{Struct_point}, Ptr{SigGenSetup}, Struct_cyl_pt),
         pt, q, vel, Ref(setup), Efield
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
