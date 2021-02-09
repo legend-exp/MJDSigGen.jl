@@ -15,35 +15,34 @@ using Test, MJDSigGen, DelimitedFiles
         # end
 
         @testset "read_config" begin
-            let setup1 = SigGenSetup(), setup2 = read_config(config_file)
-                read_config!(setup1, config_file)
+            setup1 = SigGenSetup()
+            read_config!(setup1, config_file)
 
-                @test setup1 !== setup2
-                
-                # Rquire all fields set to 0 initially?
+            setup2 = read_config(config_file)
 
-                # test some fields
-                for setup in (setup1, setup2)
-                    setup isa SigGenSetup
+            @test setup1 !== setup2
 
-                    @test setup.xtal_length         == 80
-                    @test setup.xtal_radius         == 35
-                    @test setup.bottom_taper_length == 0
-                    @test setup.outer_taper_length  == 60
+            # test some fields
+            for setup in (setup1, setup2)
+                setup isa SigGenSetup
 
-                    @test setup.xtal_grid      == 0.1f0
-                    @test setup.xtal_HV        == 3500
-                    @test setup.max_iterations == 30000
+                @test setup.xtal_length         == 80
+                @test setup.xtal_radius         == 35
+                @test setup.bottom_taper_length == 0
+                @test setup.outer_taper_length  == 60
 
-                    @test setup.config_name == config_file
-                    @test setup.drift_name  == "./drift_vel_tcorr.tab"
-                    @test setup.field_name  == "../fields/ev_example.dat"
-                    @test setup.wp_name     == "../fields/wp_example.dat"
+                @test setup.xtal_grid      == 0.1f0
+                @test setup.xtal_HV        == 3500
+                @test setup.max_iterations == 30000
 
-                    @test setup.xtal_temp      == 90
-                    @test setup.step_time_calc == 1.0
-                    @test setup.use_diffusion  == 0
-                end
+                @test setup.config_name == config_file
+                @test setup.drift_name  == "./drift_vel_tcorr.tab"
+                @test setup.field_name  == "../fields/ev_example.dat"
+                @test setup.wp_name     == "../fields/wp_example.dat"
+
+                @test setup.xtal_temp      == 90
+                @test setup.step_time_calc == 1.0
+                @test setup.use_diffusion  == 0
             end
         end
 
@@ -95,51 +94,63 @@ using Test, MJDSigGen, DelimitedFiles
             cyls  = [(√2, π/4, 1.), (1., 0., -5.), (2., -π/2., 3.)]
 
             for ((x, y, z1), (r, ϕ, z2)) in zip(carts, cyls)
-                @test collect(MJDSigGen.cart2cyl(x, y, z1)) ≈ [r, ϕ, z2]
-                @test collect(MJDSigGen.cyl2cart(r, ϕ, z2)) ≈ [x, y, z1]
+                @test [MJDSigGen.cart2cyl(x, y, z1)...] ≈ [r, ϕ, z2]
+                @test [MJDSigGen.cyl2cart(r, ϕ, z2)...] ≈ [x, y, z1]
             end
         end
 
-        # @testset "geometry" begin
-        #     @test MJDSigGen.outside_detector(setup, (-10, 0, -10)) == true
-        #     @test MJDSigGen.outside_detector(setup, (10, 0, 10)) == false
+        @testset "signal_calc_init and siggen" begin
+            setup = signal_calc_init(config_file)
 
-        #     grid = setup.xtal_grid
-        #     @test MJDSigGen.nearest_field_grid_index(setup, (8, 0, 12)) == (:interpol, round.(Int, [12, 8] / grid .+ 1)...)
-        #     @test MJDSigGen.nearest_field_grid_index(setup, (10, 0, -10)) == (:outside,0,0)
-        #     @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, round.(Int, [10.0, 1.0 * setup.xtal_radius] / grid + [1, 0])...)
-        # end
+            setup2 = SigGenSetup()
+            signal_calc_init!(setup2, config_file)
+            
+            for p in [(10.1, 10.0, 10.0), (0.0, 5.3, 20.2), (20.0, 2.1, 63.2)]
+                s = get_signal!(setup, p)
 
+                @test get_signal!(setup2, p) == s
 
-        # @testset "siggen" begin
-        #     charge_signal = Array{Float32, 1}()
-        #     @test begin
-        #         charge_signal = MJDSigGen.get_signal!(setup, (10.1, 10.0, 10.0))::typeof(charge_signal)
-        #         size(charge_signal) == (setup.ntsteps_out,)
-        #     end
+                @test s isa Vector{Float32}
+                @test length(s) == setup.ntsteps_out
 
-        #     path_e = Array{Float32}(undef, 0,0)
-        #     @test begin
-        #         path_e = MJDSigGen.drift_path(setup, :e)::typeof(path_e)
-        #         (size(path_e, 2) == 3) && (0 < size(path_e, 1) <= setup.time_steps_calc)
-        #     end
+                @test -0.01 < s[1]   < 0.01
+                @test  0.99 < s[end] < 1.01
 
-        #     path_h = Array{Float32}(undef, 0,0)
-        #     @test begin
-        #         path_h = MJDSigGen.drift_path(setup, :h)::typeof(path_h)
-        #         (size(path_h, 2) == 3) && (0 < size(path_h, 1) <= setup.time_steps_calc)
-        #     end
+                @test minimum(diff(s)) > -0.01 / setup.ntsteps_out
+                @test all(-0.01 .< s .< 1.01)
 
-        #     @test 0 <= charge_signal[1] < 0.01
-        #     n_steps_drift_out = ceil(Int, (max(size(path_e, 1), size(path_h, 1)) / setup.time_steps_calc * setup.ntsteps_out)) + 1
-        #     @test charge_signal[n_steps_drift_out] ≈ 1
+                @test setup.dpath_e       isa AbstractArray{Float32}
+                @test size(setup.dpath_e)  == (setup.time_steps_calc, 3)
+                @test setup.dpath_e[1, :]   ≈ [p...]
+                @test setup.dpath_e[end, :] ≈ [0, 0, 0]
 
-        #     @test begin
-        #         MJDSigGen.signal_calc_finalize!(setup)
-        #         result = (setup.wpot == C_NULL && setup.dpath_h == C_NULL)
-        #         MJDSigGen.signal_calc_finalize!(setup)
-        #         result
-        #     end
-        # end
+                n = findfirst(i -> setup.dpath_e[i, :] ≈ [0, 0, 0], axes(setup.dpath_e, 1))
+
+                @test setup.dpath_h isa AbstractArray{Float32}
+                @test size(setup.dpath_h) == (setup.time_steps_calc, 3)
+                @test setup.dpath_h[1, :]   ≈ [p...]
+                @test setup.dpath_h[end, :] ≈ [0, 0, 0]
+
+                n = max(
+                    n,
+                    findfirst(i -> setup.dpath_h[i, :] ≈ [0, 0, 0], axes(setup.dpath_h, 1))
+                )
+                n = ceil(Int, n * setup.ntsteps_out / setup.time_steps_calc) + 1
+
+                @test 0.99 < s[n] < 1.01
+            end
+        end
+
+        @testset "geometry" begin
+            setup = signal_calc_init(config_file)
+
+            @test outside_detector(setup, (-10, 0, -10)) == true
+            @test outside_detector(setup, ( 10, 0,  10)) == false
+
+            grid = setup.xtal_grid
+            @test MJDSigGen.nearest_field_grid_index(setup, (8, 0, 12)) == (:interpol, round.(Int, [12, 8] / grid .+ 1)...)
+            @test MJDSigGen.nearest_field_grid_index(setup, (10, 0, -10)) == (:outside,0,0)
+            @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, round.(Int, [10.0, 1.0 * setup.xtal_radius] / grid + [1, 0])...)
+        end
     end
 end
