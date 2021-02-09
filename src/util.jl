@@ -49,5 +49,5 @@ function cart2cyl(x, y, z)
     else
         ϕ = (x < 0) ? atan(y/x) + π : atan(y/x)
     end
-    (r, ϕ, z)
+    return r, ϕ, z
 end
