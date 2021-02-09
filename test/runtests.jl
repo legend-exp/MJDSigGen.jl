@@ -47,7 +47,7 @@ using Test, MJDSigGen, DelimitedFiles
             end
         end
 
-        @testset "fieldgen & read_fields" begin
+        @testset "fieldgen and read_fields" begin
             field_data, wpot_data = cd(joinpath(scratchdir, "examples", "fields")) do 
                 readdlm("ev_example.dat", comments=true),
                 readdlm("wp_example.dat", comments=true)
@@ -90,13 +90,15 @@ using Test, MJDSigGen, DelimitedFiles
             @test E_z   == reshape(field_data[:, 6], (Nz, Nr))
         end
 
-        #     @testset "cyl2cart and cart2cyl" begin
-        #         @test [MJDSigGen.cyl2cart(MJDSigGen.cart2cyl(10.1, 12.1, 2.1)...)...] ≈ [10.1, 12.1, 2.1]
-        #         @test [MJDSigGen.cyl2cart(MJDSigGen.cart2cyl(-10.2, 12.2, 2.2)...)...] ≈ [-10.2, 12.2, 2.2]
-        #         @test [MJDSigGen.cyl2cart(MJDSigGen.cart2cyl(-10.3, -12.3, 2.3)...)...] ≈ [-10.3, -12.3, 2.3]
-        #         @test [MJDSigGen.cyl2cart(MJDSigGen.cart2cyl(10.4, -12.4, 2.4)...)...] ≈ [10.4, -12.4, 2.4]
-        #     end
-        # end
+        @testset "cyl2cart and cart2cyl" begin
+            carts = [(1.,  1., 1.), (1., 0., -5.), (0.,   -2., 3.)]
+            cyls  = [(√2, π/4, 1.), (1., 0., -5.), (2., -π/2., 3.)]
+
+            for ((x, y, z1), (r, ϕ, z2)) in zip(carts, cyls)
+                @test collect(MJDSigGen.cart2cyl(x, y, z1)) ≈ [r, ϕ, z2]
+                @test collect(MJDSigGen.cyl2cart(r, ϕ, z2)) ≈ [x, y, z1]
+            end
+        end
 
         # @testset "geometry" begin
         #     @test MJDSigGen.outside_detector(setup, (-10, 0, -10)) == true
