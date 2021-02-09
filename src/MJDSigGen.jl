@@ -21,7 +21,8 @@ end
 
 import Base
 
-export SigGenSetup, read_config!, read_config, fieldgen, read_fields
+export SigGenSetup, read_config!, read_config, fieldgen, read_fields, signal_calc_init!,
+    signal_calc_init, get_signal!, outside_detector
 
 using DelimitedFiles
 
