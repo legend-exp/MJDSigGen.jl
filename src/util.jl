@@ -1,22 +1,5 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-function tuplestr(s::NTuple{N,Cchar}) where {N}
-    a = [c % UInt8 for c in s]
-    from = firstindex(a)
-    to = something(findfirst(x -> x == 0, a), lastindex(a) + 1) - 1
-    String(a[from:to])
-end
-
-
-config_file_name(setup::SigGenSetup) =
-    tuplestr(setup.config_name)
-
-field_file_name(setup::SigGenSetup) = 
-    joinpath(dirname(config_file_name(setup)), tuplestr(setup.field_name))
-
-wpot_file_name(setup::SigGenSetup) = 
-    joinpath(dirname(config_file_name(setup)), tuplestr(setup.wp_name))
-
 function read_fields(setup::SigGenSetup)
     config_dir = dirname(setup.config_name)
     field_data = readdlm(joinpath(config_dir, setup.field_name), comments=true)
