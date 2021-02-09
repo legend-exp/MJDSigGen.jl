@@ -202,7 +202,7 @@ function outside_detector(setup, location::NTuple{3})
         pt, Ref(setup)
     )
 
-    r != 0
+    return r != 0
 end
 
 
