@@ -112,9 +112,12 @@ using Test, MJDSigGen, DelimitedFiles
 
                 @test get_signal!(setup2, p) == s
 
-                @test_throws ArgumentError get_signal!(zeros(setup.ntsteps_out - 1), setup, p)
+                arr = zeros(Float32, setup.ntsteps_out - 1)
+                @test_throws ArgumentError get_signal!(arr, setup, p)
 
-                @test get_signal!(zeros(setup.ntsteps_out), setup, p) == s
+                arr2 = zeros(Float32, setup.ntsteps_out)
+                @test get_signal!(arr2, setup, p) == s
+                @test arr2 == s
 
                 @test s isa Vector{Float32}
                 @test length(s) == setup.ntsteps_out
@@ -144,6 +147,22 @@ using Test, MJDSigGen, DelimitedFiles
                 n = ceil(Int, n * setup.ntsteps_out / setup.time_steps_calc) + 1
 
                 @test 0.99 < s[n] < 1.01
+
+                @test setup.instant_vel_e       isa AbstractArray{Float32}
+                @test size(setup.instant_vel_e)  == (setup.time_steps_calc, 3)
+                @test setup.instant_vel_e[end, :] ≈ [0, 0, 0]
+
+                @test setup.instant_vel_h      isa AbstractArray{Float32}
+                @test size(setup.instant_vel_h) == (setup.time_steps_calc, 3)
+                @test setup.instant_vel_h[end, :] ≈ [0, 0, 0]
+
+                @test setup.instant_charge_size_e      isa AbstractArray{Float32}
+                @test size(setup.instant_charge_size_e) == (setup.time_steps_calc,)
+                @test all(setup.instant_charge_size_e .>= 0)
+
+                @test setup.instant_charge_size_h      isa AbstractArray{Float32}
+                @test size(setup.instant_charge_size_h) == (setup.time_steps_calc,)
+                @test all(setup.instant_charge_size_h .>= 0)
             end
         end
 
