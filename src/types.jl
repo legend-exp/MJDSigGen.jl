@@ -1,42 +1,24 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-struct Struct_point
-    x::Cfloat
-    y::Cfloat
-    z::Cfloat
+struct CartPoint{T<:Real}
+    x::T
+    y::T
+    z::T
 end
 
-Struct_point() = Struct_point(0, 0, 0)
+CartPoint{T}() where {T} = CartPoint{T}(0, 0, 0)
 
 
-struct Struct_int_pt
-    x::Cint
-    y::Cint
-    z::Cint
+struct CylPoint{T<:Real}
+    r::T
+    phi::T
+    z::T
 end
 
-Struct_int_pt() = Struct_int_pt(0, 0, 0)
+CylPoint{T}() where {T} = CylPoint{T}(0, 0, 0)
 
 
-struct Struct_cyl_pt
-    r::Cfloat
-    phi::Cfloat
-    z::Cfloat
-end
-
-Struct_cyl_pt() = Struct_cyl_pt(0, 0, 0)
-
-
-struct Struct_cyl_int_pt
-    r::Cint
-    phi::Cint
-    z::Cint
-end
-
-Struct_cyl_int_pt() = Struct_cyl_int_pt(0, 0, 0)
-
-
-mutable struct Struct_velocity_lookup
+mutable struct VelocityLookup
     e::Cfloat
     e100::Cfloat
     e110::Cfloat
@@ -57,7 +39,7 @@ mutable struct Struct_velocity_lookup
     hcorr::Cfloat
     ecorr::Cfloat
 
-    Struct_velocity_lookup() = new()
+    VelocityLookup() = new()
 end
 
 
@@ -131,15 +113,15 @@ mutable struct SigGenSetup
     rlen::Cint
     zlen::Cint
     v_lookup_len::Cint
-    v_lookup::Ptr{Struct_velocity_lookup}
-    efld::Ptr{Ptr{Struct_cyl_pt}}
+    v_lookup::Ptr{VelocityLookup}
+    efld::Ptr{Ptr{CylPoint{Cfloat}}}
     wpot::Ptr{Ptr{Cfloat}}
 
     # data for calc_signal.c
-    dpath_e::Ptr{Struct_point}
-    dpath_h::Ptr{Struct_point}
-    instant_vel_e::Ptr{Struct_point}
-    instant_vel_h::Ptr{Struct_point}
+    dpath_e::Ptr{CartPoint{Cfloat}}
+    dpath_h::Ptr{CartPoint{Cfloat}}
+    instant_vel_e::Ptr{CartPoint{Cfloat}}
+    instant_vel_h::Ptr{CartPoint{Cfloat}}
     instant_charge_size_e::Ptr{Cfloat}
     instant_charge_size_h::Ptr{Cfloat}
     initial_vel::Cfloat
@@ -172,8 +154,8 @@ function Base.getproperty(setup::SigGenSetup, sym::Symbol)
         return tup2str(getfield(setup, sym))
     elseif sym == :dpath_e || sym == :dpath_h
         ptr = getfield(setup, sym)
-        path = reinterpret(Cfloat, unsafe_wrap(Array, ptr, setup.time_steps_calc))
-        return transpose(reshape(path, (3, setup.time_steps_calc)))
+        path = unsafe_wrap(Array{CartPoint{Cfloat}}, ptr, setup.time_steps_calc)
+        return transpose(reshape(reinterpret(Cfloat, path), (3, setup.time_steps_calc)))
     else
         return getfield(setup, sym)
     end

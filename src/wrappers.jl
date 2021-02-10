@@ -47,11 +47,11 @@ function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, locatio
     sl != nsteps && throw(
         BoundsError("signal length ($ls) must equal number of time steps ($nsteps)"))
 
-    pt = Struct_point(location[1], location[2], location[3])
+    pt = CartPoint{Cfloat}(location[1], location[2], location[3])
 
     result = ccall(
         @sgsym(:get_signal), Cint,
-        (Struct_point, Ptr{Float32}, Ptr{SigGenSetup}),
+        (CartPoint{Cfloat}, Ptr{Float32}, Ptr{SigGenSetup}),
         pt, signal, Ref(setup)
     )
     result < 0 && error("Point not in crystal or has no field: $pt")
@@ -80,7 +80,7 @@ function drift_path_len(setup::SigGenSetup, t::Symbol)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
         pt = unsafe_load(path_ptr, i)
-        if pt == Struct_point()
+        if pt == CartPoint{Cfloat}()
             return i - 1
         end
     end
@@ -125,7 +125,7 @@ function instant_vel_len(setup::SigGenSetup, t::Symbol)
     n = setup.time_steps_calc
     @inbounds for i in 1:n
         pt = unsafe_load(vel_ptr, i)
-        if pt == Struct_point()
+        if pt == CartPoint{Cfloat}()
             return i - 1
         end
     end
@@ -194,11 +194,11 @@ instant_charge_size(setup, t::Symbol) =
     instant_charge_size!(zeros(Float32, instant_charge_size_len(setup, t)), setup, t)
 
 function outside_detector(setup, location::NTuple{3})
-    pt = Struct_point(location[1], location[2], location[3])
+    pt = CartPoint{Cfloat}(location[1], location[2], location[3])
 
     r = ccall(
         @sgsym(:outside_detector), Cint,
-        (Struct_point, Ptr{SigGenSetup}),
+        (CartPoint{Cfloat}, Ptr{SigGenSetup}),
         pt, Ref(setup)
     )
 
@@ -216,12 +216,12 @@ Returns:
 """
 function nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3})
     r, ϕ, z = cart2cyl(location ...)
-    cyl_pos_val = Struct_cyl_pt(r, ϕ, z)
-    cyl_idx_ref = Ref(Struct_cyl_int_pt(0, 0, 0))
+    cyl_pos_val = CylPoint{Cfloat}(r, ϕ, z)
+    cyl_idx_ref = Ref(CylPoint{Cint}(0, 0, 0))
 
     retcode = ccall(
         @sgsym(:nearest_field_grid_index), Cint,
-        (Struct_cyl_pt, Ptr{Struct_cyl_int_pt}, Ptr{SigGenSetup}, ),
+        (CylPoint{Cfloat}, Ptr{CylPoint{Cint}}, Ptr{SigGenSetup}, ),
         cyl_pos_val, cyl_idx_ref, Ref(setup)
     )
 
@@ -262,12 +262,12 @@ function get_drift_velocity(setup::SigGenSetup, location::NTuple{3}, t::Symbol)
 		error("Charge carrier type must be :e or :h")
 	end
 
-    pt	= Struct_point(location[1], location[2], location[3])
-	vel	= Ref(Struct_point(0, 0, 0))
+    pt	= CartPoint{Cfloat}(location[1], location[2], location[3])
+	vel	= Ref(CartPoint{Cfloat}(0, 0, 0))
 
     ccall(
         @sgsym(:drift_velocity), Cint,
-        (Struct_point, Float32, Ptr{Struct_point}, Ptr{SigGenSetup}),
+        (CartPoint{Cfloat}, Float32, Ptr{CartPoint{Cfloat}}, Ptr{SigGenSetup}),
         pt, q, vel, Ref(setup)
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
@@ -286,18 +286,19 @@ function get_drift_velocity_w_Eadd(setup::SigGenSetup, location::NTuple{3}, t::S
 		error("Charge carrier type must be :e or :h")
 	end
 	
-    pt	= Struct_point(location[1], location[2], location[3])
-	vel	= Ref(Struct_point(0, 0, 0))
+    pt	= CartPoint{Cfloat}(location[1], location[2], location[3])
+	vel	= Ref(CartPoint{Cfloat}(0, 0, 0))
 	Er, Eϕ, Ez = cart2cyl(Eadd_cart ...);
 	if(Eadd_cart[1]<0)
 		Er =-Er;
 		Eϕ = 0;
 	end	
-	Eadd = Struct_cyl_pt(Er, Eϕ, Ez);
+	Eadd = CylPoint{Cfloat}(Er, Eϕ, Ez);
 
     ccall(
         @sgsym(:drift_velocity_w_Eadd), Cint,
-        (Struct_point, Float32, Ptr{Struct_point}, Ptr{SigGenSetup}, Struct_cyl_pt),
+        (CartPoint{Cfloat}, Float32, Ptr{CartPoint{Cfloat}},
+        Ptr{SigGenSetup}, CylPoint{Cfloat}),
         pt, q, vel, Ref(setup), Eadd
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
@@ -316,18 +317,18 @@ function get_drift_velocity_from_Efield(setup::SigGenSetup, location::NTuple{3},
 		error("Charge carrier type must be :e or :h")
 	end
 	
-    pt	= Struct_point(location[1], location[2], location[3])
-	vel	= Ref(Struct_point(0, 0, 0))
+    pt	= CartPoint{Cfloat}(location[1], location[2], location[3])
+	vel	= Ref(CartPoint{Cfloat}(0, 0, 0))
 	Er, Eϕ, Ez = cart2cyl(Efield_cart ...);
 	if(Efield_cart[1]<0)
 		Er =-Er;
 		Eϕ = 0;
 	end	
-	Efield = Struct_cyl_pt(Er, Eϕ, Ez);
+	Efield = CylPoint{Cfloat}(Er, Eϕ, Ez);
 
     ccall(
         @sgsym(:drift_velocity_from_Efield), Cint,
-        (Struct_point, Float32, Ptr{Struct_point}, Ptr{SigGenSetup}, Struct_cyl_pt),
+        (CartPoint{Cfloat}, Float32, Ptr{CartPoint{Cfloat}}, Ptr{SigGenSetup}, CylPoint{Cfloat}),
         pt, q, vel, Ref(setup), Efield
     ) < 0 && error("Point not in crystal or has no field: $pt")
 
