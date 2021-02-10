@@ -41,7 +41,7 @@ function signal_calc_finalize!(setup::SigGenSetup)
 end
 
 
-function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, location::NTuple{3})
+function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, location::NTuple{3, Real})
     sl = length(signal)
     nsteps = setup.ntsteps_out
     sl != nsteps && throw(
@@ -60,11 +60,11 @@ function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, locatio
 end
 
 
-get_signal!(setup::SigGenSetup, location::NTuple{3}) =
+get_signal!(setup::SigGenSetup, location::NTuple{3, Real}) =
     get_signal!(zeros(Float32, setup.ntsteps_out), setup, location)
 
 
-function outside_detector(setup, location::NTuple{3})
+function outside_detector(setup, location::NTuple{3, Real})
     pt = CartPoint{Cfloat}(location[1], location[2], location[3])
 
     r = ccall(
@@ -78,14 +78,14 @@ end
 
 
 """
-    nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3})
+    nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3, Real})
 
 Returns:
 * (:outside, i, j), if outside crystal or too far from a valid grid point
 * (:interpol, i, j, if interpolation is okay
 * (:extrapol, i, j), if we can find a point but extrapolation is needed
 """
-function nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3})
+function nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3, Real})
     r, ϕ, z = cart2cyl(location ...)
     cyl_pos_val = CylPoint{Cfloat}(r, ϕ, z)
     cyl_idx_ref = Ref(CylPoint{Cint}(0, 0, 0))
@@ -127,7 +127,7 @@ function fieldgen(config_filename::AbstractString)
 end
 
 
-function get_drift_velocity(setup::SigGenSetup, location::NTuple{3}, t::Symbol)
+function get_drift_velocity(setup::SigGenSetup, location::NTuple{3, Real}, t::Symbol)
 	if t==:e
 		q = -1;
 	elseif t==:h
@@ -149,7 +149,7 @@ function get_drift_velocity(setup::SigGenSetup, location::NTuple{3}, t::Symbol)
     return vel.x;
 end
 
-function get_drift_velocity_w_Eadd(setup::SigGenSetup, location::NTuple{3}, t::Symbol, Eadd_cart::NTuple{3})
+function get_drift_velocity_w_Eadd(setup::SigGenSetup, location::NTuple{3, Real}, t::Symbol, Eadd_cart::NTuple{3, Real})
 	if t==:e
 		q = -1;
 	elseif t==:h
@@ -179,7 +179,7 @@ function get_drift_velocity_w_Eadd(setup::SigGenSetup, location::NTuple{3}, t::S
 end
 
 
-function get_drift_velocity_from_Efield(setup::SigGenSetup, location::NTuple{3}, t::Symbol, Efield_cart::NTuple{3})
+function get_drift_velocity_from_Efield(setup::SigGenSetup, location::NTuple{3, Real}, t::Symbol, Efield_cart::NTuple{3, Real})
 	if t==:e
 		q = -1;
 	elseif t==:h
