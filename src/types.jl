@@ -150,12 +150,16 @@ function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
 end
 
 function Base.getproperty(setup::SigGenSetup, sym::Symbol)
-    if sym == :config_name || sym == :drift_name || sym == :field_name || sym == :wp_name
+    if sym in (:config_name, :drift_name, :field_name, :wp_name)
         return tup2str(getfield(setup, sym))
-    elseif sym == :dpath_e || sym == :dpath_h
+    elseif sym in (:dpath_e, :dpath_h, :instant_vel_e, :instant_vel_h)
         ptr = getfield(setup, sym)
-        path = unsafe_wrap(Array{CartPoint{Cfloat}}, ptr, setup.time_steps_calc)
-        return transpose(reshape(reinterpret(Cfloat, path), (3, setup.time_steps_calc)))
+        N = setup.time_steps_calc
+        v = unsafe_wrap(Vector{CartPoint{Cfloat}}, ptr, N)
+        return transpose(reshape(reinterpret(Cfloat, v), (3, N)))
+    elseif sym in (:instant_charge_size_e, :instant_charge_size_h)
+        ptr = getfield(setup, sym)
+        return unsafe_wrap(Vector{Cfloat}, ptr, setup.time_steps_calc)
     else
         return getfield(setup, sym)
     end
