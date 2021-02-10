@@ -104,11 +104,17 @@ using Test, MJDSigGen, DelimitedFiles
 
             setup2 = SigGenSetup()
             signal_calc_init!(setup2, config_file)
+
+            @test_throws ArgumentError get_signal!(setup, (100, 200, 100))
             
             for p in [(10.1, 10.0, 10.0), (0.0, 5.3, 20.2), (20.0, 2.1, 63.2)]
                 s = get_signal!(setup, p)
 
                 @test get_signal!(setup2, p) == s
+
+                @test_throws ArgumentError get_signal!(zeros(setup.ntsteps_out - 1), setup, p)
+
+                @test get_signal!(zeros(setup.ntsteps_out), setup, p) == s
 
                 @test s isa Vector{Float32}
                 @test length(s) == setup.ntsteps_out
