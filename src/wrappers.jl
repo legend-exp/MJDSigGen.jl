@@ -45,7 +45,7 @@ function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, locatio
     sl = length(signal)
     nsteps = setup.ntsteps_out
     sl != nsteps && throw(
-        BoundsError("signal length ($ls) must equal number of time steps ($nsteps)"))
+        ArgumentError("signal length ($ls) must equal number of time steps ($nsteps)"))
 
     pt = CartPoint{Cfloat}(location[1], location[2], location[3])
 
@@ -54,7 +54,7 @@ function get_signal!(signal::DenseArray{Float32, 1}, setup::SigGenSetup, locatio
         (CartPoint{Cfloat}, Ptr{Float32}, Ptr{SigGenSetup}),
         pt, signal, Ref(setup)
     )
-    result < 0 && error("Point not in crystal or has no field: $pt")
+    result < 0 && throw(ArgumentError("point not in crystal or has no field: $pt"))
 
     return signal
 end
@@ -236,7 +236,10 @@ function nearest_field_grid_index(setup::SigGenSetup, location::NTuple{3})
     elseif retcode == 1
         (:extrapol, i, j)
     else
-        error("Don't know how to interpret return code $retcode of nearest_field_grid_index unknown")
+        throw(ArgumentError(
+            "Don't know how to interpret return code $retcode of
+            nearest_field_grid_index unknown"
+        ))
     end
 end
 
@@ -273,8 +276,6 @@ function get_drift_velocity(setup::SigGenSetup, location::NTuple{3}, t::Symbol)
 
 	#asd = unsafe_load(vel);
     return vel.x;
-	
-	
 end
 
 function get_drift_velocity_w_Eadd(setup::SigGenSetup, location::NTuple{3}, t::Symbol, Eadd_cart::NTuple{3})
