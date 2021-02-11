@@ -1,5 +1,5 @@
 name = "MJDSigGen"
-uuid = "d3f1610b-2cc8-4877-9c4b-1cc92a82e4fd"
+uuid = "0b925020-e659-485c-98dd-189633cb4be4"
 version = "0.1.0"
 
 [deps]
@@ -7,3 +7,6 @@ BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+julia = "1"
