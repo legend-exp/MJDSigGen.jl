@@ -212,5 +212,27 @@ using Test, MJDSigGen, DelimitedFiles
             @test setup.use_acceleration  == 0
             @test setup.use_repulsion     == 0
         end
+
+        @testset "getδτ" begin
+            @test getδτ(7, 3) == 7 / 3
+
+            setup = SigGenSetup(config_file)
+
+            with_coll_effects!(setup, 1500, 3) do
+                get_signal!(setup, (10, 10, 10))
+            end
+
+            δτ = setup.final_charge_size / setup.final_vel
+
+            @test getδτ(setup) == δτ
+
+            get_signal!(setup, (12, 11, 10))
+
+            @test getδτ(setup) != δτ
+
+            with_coll_effects!(setup, 1500, 3) do
+                @test getδτ!(setup, (10, 10, 10)) == δτ
+            end
+        end
     end
 end

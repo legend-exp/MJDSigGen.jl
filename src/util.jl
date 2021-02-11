@@ -35,6 +35,7 @@ function cart2cyl(x, y, z)
     return r, ϕ, z
 end
 
+
 function coll_effects_off!(setup::SigGenSetup)
     setup.energy            = 0
 	setup.charge_cloud_size = 0
@@ -56,4 +57,14 @@ function with_coll_effects!(f::Function, setup::SigGenSetup, E::Real, ch_cld_siz
 	finally
 		coll_effects_off!(setup)
 	end
+end
+
+
+getδτ(charge_size::Real, speed::Real) = charge_size / speed
+
+getδτ(setup::SigGenSetup) = getδτ(setup.final_charge_size, setup.final_vel)
+
+function getδτ!(setup::SigGenSetup, pos::NTuple{3, Real})
+    get_signal!(setup, pos)
+    return getδτ(setup)
 end
