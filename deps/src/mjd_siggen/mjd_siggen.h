@@ -107,6 +107,8 @@ typedef struct {
   float step_time_out;        // length of time step for output signal, in ns
   //    nonzero values in the next few lines significantly slow down the code
   float charge_cloud_size;    // initial FWHM of charge cloud, in mm; set to zero for point charges
+  int   use_acceleration;     // set to 0/1 for ignore/add acceleration effects on charge cloud size
+  int   use_repulsion;        // set to 0/1 for ignore/add repulsion as the charges drift
   int   use_diffusion;        // set to 0/1 for ignore/add diffusion as the charges drift
   float energy;               // set to energy > 0 to use charge cloud self-repulsion, in keV
 
@@ -124,6 +126,10 @@ typedef struct {
   
   // data for calc_signal.c
   point *dpath_e, *dpath_h;      // electron and hole drift paths
+  point *instant_vel_e;          // instant vel of holes
+  point *instant_vel_h;          // instant vel of electrons
+  float *instant_charge_size_e;  // instant charge cloud size (holes)
+  float *instant_charge_size_h;  // instant charge cloud size (holes)
   float initial_vel, final_vel;  // initial and final drift velocities for charges collected to PC
   float dv_dE;     // derivative of drift velocity with field ((mm/ns) / (V/cm))
   float v_over_E;  // ratio of drift velocity to field ((mm/ns) / (V/cm))

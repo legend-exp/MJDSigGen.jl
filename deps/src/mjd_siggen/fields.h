@@ -49,6 +49,15 @@ int wpotential(point pt, float *wp, MJD_Siggen_Setup *setup);
 */
 int drift_velocity(point pt, float q, vector *velocity, MJD_Siggen_Setup *setup);
 
+/* TC: get drift_velocity with linear superposition of 2 fields:
+		1. Detector field, E
+		2. Charge cloud field, Eadd
+*/
+int drift_velocity_w_Eadd(point pt, float q, vector *velo, MJD_Siggen_Setup *setup, cyl_pt Eadd);
+
+/* TC: get drift_velocity from Efield */
+int drift_velocity_from_Efield(point pt, float q, vector *velo, MJD_Siggen_Setup *setup, cyl_pt Efield);
+
 int read_fields(MJD_Siggen_Setup *setup);
 
 /*set detector temperature. 77F (no correction) is the default

@@ -17,7 +17,7 @@
    returns 1 if pt is outside the detector, 0 if inside detector
 */
 int outside_detector(point pt, MJD_Siggen_Setup *setup){
-  float r, z, br, a;
+  float r, z, br, bbr,a;
 
   z = pt.z;
   if (z >= setup->zmax || z < 0) return 1;
@@ -25,8 +25,11 @@ int outside_detector(point pt, MJD_Siggen_Setup *setup){
   r = sqrt(SQ(pt.x)+SQ(pt.y));
   if (r > setup->rmax) return 1;
   br = setup->top_bullet_radius;
+  bbr= setup->bottom_bullet_radius;
   if (z > setup->zmax - br &&
       r > (setup->rmax - br) + sqrt(SQ(br)- SQ(z-(setup->zmax - br)))) return 1;
+  if (z < sqrt(SQ(bbr)-SQ(setup->wrap_around_radius/2)) &&
+      r > (setup->rmax - br) + sqrt(SQ(bbr)- SQ(bbr-z))) return 1;
   if (setup->pc_radius > 0 &&
       z <= setup->pc_length && r <= setup->pc_radius) {
     if (!setup->bulletize_PC) return 1;
@@ -54,17 +57,18 @@ int outside_detector(point pt, MJD_Siggen_Setup *setup){
       z > setup->zmax - setup->outer_taper_length &&
       r > setup->rmax - ((z - setup->zmax + setup->outer_taper_length) *
                          setup->outer_taper_width / setup->outer_taper_length)) return 1;
-  /* check inner taper of hole */
-  if (setup->inner_taper_length > 0 &&
+/* check inner taper of hole */
+if (setup->inner_taper_length > 0 &&
       z > setup->zmax - setup->inner_taper_length &&
       r < setup->rmax - ((z - setup->zmax + setup->inner_taper_length) *
                          setup->inner_taper_width / setup->inner_taper_length)) return 1;
+
 
   return 0;
 }
 
 int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
-  float r, z, br, a;
+  float r, z, br, bbr, a;
 
   z = pt.z;
   if (z >= setup->zmax || z < 0) return 1;
@@ -72,8 +76,11 @@ int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
   r = pt.r;
   if (r > setup->rmax) return 1;
   br = setup->top_bullet_radius;
+  bbr = setup->bottom_bullet_radius; 
   if (z > setup->zmax - br &&
       r > (setup->rmax - br) + sqrt(SQ(br)- SQ(z-(setup->zmax - br)))) return 1;
+  if (z < sqrt(SQ(bbr)-SQ(setup->wrap_around_radius/2)) &&
+      r > (setup->rmax - br) + sqrt(SQ(bbr)- SQ(bbr-z))) return 1;
   if (setup->pc_radius > 0 &&
       z <= setup->pc_length && r <= setup->pc_radius) {
     if (!setup->bulletize_PC) return 1;
@@ -101,11 +108,12 @@ int outside_detector_cyl(cyl_pt pt, MJD_Siggen_Setup *setup){
       z > setup->zmax - setup->outer_taper_length &&
       r > setup->rmax - ((z - setup->zmax + setup->outer_taper_length) *
                          setup->outer_taper_width / setup->outer_taper_length)) return 1;
-  /* check inner taper of hole */
+/* check inner taper of hole */
   if (setup->inner_taper_length > 0 &&
       z > setup->zmax - setup->inner_taper_length &&
-      r < setup->rmax - ((z - setup->zmax + setup->inner_taper_length) *
-                         setup->inner_taper_width / setup->inner_taper_length)) return 1;
+      r < setup->hole_radius + ((z - setup->zmax + setup->inner_taper_length) *
+                         (setup->rmax-setup->inner_taper_width-setup->hole_radius) /
+                          setup->inner_taper_length)) return 1;
 
   return 0;
 }

@@ -1,37 +1,24 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-function tuplestr(s::NTuple{N,Cchar}) where {N}
-    a = [c % UInt8 for c in s]
-    from = firstindex(a)
-    to = something(findfirst(x -> x == 0, a), lastindex(a) + 1) - 1
-    String(a[from:to])
-end
+function read_fields(setup::SigGenSetup)
+    config_dir = dirname(setup.config_name)
+    field_data = readdlm(joinpath(config_dir, setup.field_name), comments=true)
+    wpot_data = readdlm(joinpath(config_dir, setup.wp_name), comments=true)
 
+    Nr::Int = setup.xtal_radius / setup.xtal_grid + 1
+    Nz::Int = setup.xtal_length / setup.xtal_grid + 1
+    N = Nz * Nr
 
-config_file_name(setup::Struct_MJD_Siggen_Setup) =
-    tuplestr(setup.config_name)
+    @assert size(field_data, 1) == size(wpot_data, 1) == N
 
-field_file_name(setup::Struct_MJD_Siggen_Setup) = 
-    joinpath(dirname(config_file_name(setup)), tuplestr(setup.field_name))
+    E_pot = copy(reshape(view(field_data, :, 3), (Nz, Nr)))
+    W_pot = copy(reshape(view(wpot_data, :, 3), (Nz, Nr)))
 
-wpot_file_name(setup::Struct_MJD_Siggen_Setup) = 
-    joinpath(dirname(config_file_name(setup)), tuplestr(setup.wp_name))
+    E_abs = copy(reshape(view(field_data, :, 4), (Nz, Nr)))
+    E_r = copy(reshape(view(field_data, :, 5), (Nz, Nr)))
+    E_z = copy(reshape(view(field_data, :, 6), (Nz, Nr)))
 
-function read_fields(setup::Struct_MJD_Siggen_Setup)
-    field_data = readdlm(field_file_name(setup), comments=true)
-    wpot_data = readdlm(wpot_file_name(setup), comments=true)
-    n_r = setup.rlen
-    n_z = setup.zlen
-    @assert (size(field_data, 1) == size(wpot_data, 1) == n_r * n_z)
-
-    E_pot = copy(reshape(view(field_data, :, 3), (n_z, n_r)))
-    W_pot = copy(reshape(view(wpot_data, :, 3), (n_z, n_r)))
-
-    E_abs = copy(reshape(view(field_data, :, 4), (n_z, n_r)))
-    E_r = copy(reshape(view(field_data, :, 5), (n_z, n_r)))
-    E_z = copy(reshape(view(field_data, :, 6), (n_z, n_r)))
-
-    E_pot, W_pot, E_abs, E_r, E_z
+    return E_pot, W_pot, E_abs, E_r, E_z
 end
 
 
@@ -45,5 +32,39 @@ function cart2cyl(x, y, z)
     else
         ϕ = (x < 0) ? atan(y/x) + π : atan(y/x)
     end
-    (r, ϕ, z)
+    return r, ϕ, z
+end
+
+
+function coll_effects_off!(setup::SigGenSetup)
+    setup.energy            = 0
+	setup.charge_cloud_size = 0
+	setup.use_diffusion     = 0
+	setup.use_acceleration  = 0
+	setup.use_repulsion     = 0
+	return setup
+end
+
+function with_coll_effects!(f::Function, setup::SigGenSetup, E::Real, ch_cld_size::Real)
+	try
+		setup.energy            = E
+		setup.charge_cloud_size = ch_cld_size
+		setup.use_diffusion     = 1
+		setup.use_acceleration  = 1
+		setup.use_repulsion     = 1
+
+		return f()
+	finally
+		coll_effects_off!(setup)
+	end
+end
+
+
+getδτ(charge_size::Real, speed::Real) = charge_size / speed
+
+getδτ(setup::SigGenSetup) = getδτ(setup.final_charge_size, setup.final_vel)
+
+function getδτ!(setup::SigGenSetup, pos::NTuple{3, Real})
+    get_signal!(setup, pos)
+    return getδτ(setup)
 end

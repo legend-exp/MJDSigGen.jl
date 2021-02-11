@@ -1,42 +1,24 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
-struct Struct_point
-    x::Cfloat
-    y::Cfloat
-    z::Cfloat
+struct CartPoint{T<:Real}
+    x::T
+    y::T
+    z::T
 end
 
-Struct_point() = Struct_point(0, 0, 0)
+CartPoint{T}() where {T} = CartPoint{T}(0, 0, 0)
 
 
-struct Struct_int_pt
-    x::Cint
-    y::Cint
-    z::Cint
+struct CylPoint{T<:Real}
+    r::T
+    phi::T
+    z::T
 end
 
-Struct_int_pt() = Struct_int_pt(0, 0, 0)
+CylPoint{T}() where {T} = CylPoint{T}(0, 0, 0)
 
 
-struct Struct_cyl_pt
-    r::Cfloat
-    phi::Cfloat
-    z::Cfloat
-end
-
-Struct_cyl_pt() = Struct_cyl_pt(0, 0, 0)
-
-
-struct Struct_cyl_int_pt
-    r::Cint
-    phi::Cint
-    z::Cint
-end
-
-Struct_cyl_int_pt() = Struct_cyl_int_pt(0, 0, 0)
-
-
-mutable struct Struct_velocity_lookup
+mutable struct VelocityLookup
     e::Cfloat
     e100::Cfloat
     e110::Cfloat
@@ -57,11 +39,11 @@ mutable struct Struct_velocity_lookup
     hcorr::Cfloat
     ecorr::Cfloat
 
-    Struct_velocity_lookup() = new()
+    VelocityLookup() = new()
 end
 
 
-mutable struct Struct_MJD_Siggen_Setup
+mutable struct SigGenSetup
     # general
     verbosity::Cint
 
@@ -113,6 +95,8 @@ mutable struct Struct_MJD_Siggen_Setup
     step_time_calc::Cfloat
     step_time_out::Cfloat
     charge_cloud_size::Cfloat
+    use_acceleration::Cint
+    use_repulsion::Cint
     use_diffusion::Cint
     energy::Cfloat
 
@@ -129,22 +113,56 @@ mutable struct Struct_MJD_Siggen_Setup
     rlen::Cint
     zlen::Cint
     v_lookup_len::Cint
-    v_lookup::Ptr{Struct_velocity_lookup}
-    efld::Ptr{Ptr{Struct_cyl_pt}}
+    v_lookup::Ptr{VelocityLookup}
+    efld::Ptr{Ptr{CylPoint{Cfloat}}}
     wpot::Ptr{Ptr{Cfloat}}
 
     # data for calc_signal.c
-    dpath_e::Ptr{Struct_point}
-    dpath_h::Ptr{Struct_point}
+    dpath_e::Ptr{CartPoint{Cfloat}}
+    dpath_h::Ptr{CartPoint{Cfloat}}
+    instant_vel_e::Ptr{CartPoint{Cfloat}}
+    instant_vel_h::Ptr{CartPoint{Cfloat}}
+    instant_charge_size_e::Ptr{Cfloat}
+    instant_charge_size_h::Ptr{Cfloat}
     initial_vel::Cfloat
     final_vel::Cfloat
     dv_dE::Cfloat
     v_over_E::Cfloat
     final_charge_size::Cdouble
 
-    Struct_MJD_Siggen_Setup() = begin
-        x = new()
-        fill!(unsafe_wrap(Array, Ptr{UInt8}(pointer_from_objref(x)), sizeof(x)), 0)
-        x
+    function SigGenSetup()
+        s = new()
+        fill!(unsafe_wrap(Array, Ptr{UInt8}(pointer_from_objref(s)), sizeof(s)), 0)
+        return s
+    end
+end
+
+SigGenSetup(config_filename::AbstractString) = signal_calc_init(config_filename)
+
+function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
+    out = Vector{UInt8}(undef, N)
+
+    for i in 1:N
+        c = @inbounds tup[i]
+        c == 0 && (resize!(out, i-1); break)
+        @inbounds out[i] = tup[i]
+    end
+
+    return String(out)
+end
+
+function Base.getproperty(setup::SigGenSetup, sym::Symbol)
+    if sym in (:config_name, :drift_name, :field_name, :wp_name)
+        return tup2str(getfield(setup, sym))
+    elseif sym in (:dpath_e, :dpath_h, :instant_vel_e, :instant_vel_h)
+        ptr = getfield(setup, sym)
+        N = setup.time_steps_calc
+        v = unsafe_wrap(Vector{CartPoint{Cfloat}}, ptr, N)
+        return transpose(reshape(reinterpret(Cfloat, v), (3, N)))
+    elseif sym in (:instant_charge_size_e, :instant_charge_size_h)
+        ptr = getfield(setup, sym)
+        return unsafe_wrap(Vector{Cfloat}, ptr, setup.time_steps_calc)
+    else
+        return getfield(setup, sym)
     end
 end
