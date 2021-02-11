@@ -177,5 +177,37 @@ using Test, MJDSigGen, DelimitedFiles
             @test MJDSigGen.nearest_field_grid_index(setup, (10, 0, -10)) == (:outside,0,0)
             @test MJDSigGen.nearest_field_grid_index(setup, (1.0 * setup.xtal_radius, 0.0, 10.0)) == (:extrapol, round.(Int, [10.0, 1.0 * setup.xtal_radius] / grid + [1, 0])...)
         end
+
+        @testset "with_coll_effects" begin
+            setup = SigGenSetup()
+
+            setup.energy            = 500
+            setup.charge_cloud_size = 0.1
+            setup.use_diffusion     = 1
+            setup.use_acceleration  = 1
+            setup.use_repulsion     = 1
+
+            coll_effects_off!(setup)
+
+            @test setup.energy            == 0
+            @test setup.charge_cloud_size == 0
+            @test setup.use_diffusion     == 0
+            @test setup.use_acceleration  == 0
+            @test setup.use_repulsion     == 0
+
+            with_coll_effects!(setup, 5, 1) do
+                @test setup.energy            == 5
+                @test setup.charge_cloud_size == 1
+                @test setup.use_diffusion     == 1
+                @test setup.use_acceleration  == 1
+                @test setup.use_repulsion     == 1
+            end
+
+            @test setup.energy            == 0
+            @test setup.charge_cloud_size == 0
+            @test setup.use_diffusion     == 0
+            @test setup.use_acceleration  == 0
+            @test setup.use_repulsion     == 0
+        end
     end
 end

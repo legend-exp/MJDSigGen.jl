@@ -34,3 +34,26 @@ function cart2cyl(x, y, z)
     end
     return r, ϕ, z
 end
+
+function coll_effects_off!(setup::SigGenSetup)
+    setup.energy            = 0
+	setup.charge_cloud_size = 0
+	setup.use_diffusion     = 0
+	setup.use_acceleration  = 0
+	setup.use_repulsion     = 0
+	return setup
+end
+
+function with_coll_effects!(f::Function, setup::SigGenSetup, E::Real, ch_cld_size::Real)
+	try
+		setup.energy            = E
+		setup.charge_cloud_size = ch_cld_size
+		setup.use_diffusion     = 1
+		setup.use_acceleration  = 1
+		setup.use_repulsion     = 1
+
+		return f()
+	finally
+		coll_effects_off!(setup)
+	end
+end
