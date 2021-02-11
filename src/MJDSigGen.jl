@@ -24,7 +24,7 @@ import Base
 export SigGenSetup, read_config!, read_config, fieldgen, read_fields, signal_calc_init!,
     signal_calc_init, get_signal!, outside_detector, with_coll_effects!, coll_effects_off!
 
-using DelimitedFiles
+using DelimitedFiles: readdlm
 
 include("types.jl")
 include("util.jl")
