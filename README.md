@@ -1,8 +1,14 @@
 # MJDSigGen.jl
 
-[![Build Status](https://travis-ci.org/mppmu/MJDSigGen.jl.svg?branch=master)](https://travis-ci.org/mppmu/MJDSigGen.jl)
-[![Coverage Status](https://coveralls.io/repos/github/mppmu/MJDSigGen.jl/badge.svg?branch=master)](https://coveralls.io/github/mppmu/MJDSigGen.jl?branch=master)
-[![codecov.io](http://codecov.io/github/mppmu/MJDSigGen.jl/coverage.svg?branch=master)](http://codecov.io/github/mppmu/MJDSigGen.jl?branch=master)
+[![Documentation for development version](https://img.shields.io/badge/docs-dev-blue.svg)](https://legend-exp.github.io/MJDSigGen.jl/dev)
+[![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
+[![Build Status](https://github.com/legend-exp/MJDSigGen.jl/workflows/CI/badge.svg?branch=master)](https://github.com/legend-exp/MJDSigGen.jl/actions?query=workflow%3ACI)
+[![Codecov](https://codecov.io/gh/legend-exp/MJDSigGen.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/legend-exp/MJDSigGen.jl)
+
+
+## Documentation
+
+* [Documentation for development version](https://legend-exp.github.io/MJDSigGen.jl/dev)
 
 MJDSigGen.jl provides a [Julia](http://julialang.org/) wrapper around
 [David Radford's](http://radware.phy.ornl.gov/) field-calculation and

@@ -1,10 +1,7 @@
+.DS_Store
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
-
-build.log
-
+.ipynb_checkpoints
+.vscode
 Manifest.toml
-
-undepleted.txt
-examples/fields
