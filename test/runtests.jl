@@ -20,10 +20,10 @@ using Test, MJDSigGen, DelimitedFiles
 
             setup2 = read_config(config_file)
 
-            @test setup1 !== setup2
+            setup3 = SigGenSetup(config_file)
 
             # test some fields
-            for setup in (setup1, setup2)
+            for setup in (setup1, setup2, setup3)
                 setup isa SigGenSetup
 
                 @test setup.xtal_length         == 80
@@ -105,12 +105,15 @@ using Test, MJDSigGen, DelimitedFiles
             setup2 = SigGenSetup()
             signal_calc_init!(setup2, config_file)
 
+            setup3 = SigGenSetup(config_file)
+
             @test_throws ArgumentError get_signal!(setup, (100, 200, 100))
             
             for p in [(10.1, 10.0, 10.0), (0.0, 5.3, 20.2), (20.0, 2.1, 63.2)]
                 s = get_signal!(setup, p)
 
                 @test get_signal!(setup2, p) == s
+                @test get_signal!(setup3, p) == s
 
                 arr = zeros(Float32, setup.ntsteps_out - 1)
                 @test_throws ArgumentError get_signal!(arr, setup, p)

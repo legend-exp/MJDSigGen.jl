@@ -137,6 +137,8 @@ mutable struct SigGenSetup
     end
 end
 
+SigGenSetup(config_filename::AbstractString) = signal_calc_init(config_filename)
+
 function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
     out = Vector{UInt8}(undef, N)
 
