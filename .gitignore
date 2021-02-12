@@ -5,3 +5,8 @@
 .ipynb_checkpoints
 .vscode
 Manifest.toml
+
+deps/build.log
+
+undepleted.txt
+examples/fields/
