@@ -7,7 +7,7 @@ signal-generation package for non-segmented high-purity Germanium detectors,
 
 ## Basic Usage
 
-To get started you'll need a config file to specify detector geometry and some simulation parameters. See the [example.config](https://github.com/legend-exp/MJDSigGen.jl/blob/master/examples/config/example.config) to get started. Next, you'll need a lookup table of drift velocities as in [drift_vel_torr.tab](https://github.com/legend-exp/MJDSigGen.jl/blob/master/examples/config/drift_vel_tcorr.tab). See that the *drift_name* field in the config file matches the relative path from the config to the velocity table file.
+To get started you'll need a config file to specify detector geometry and some simulation parameters. See the [example.config](https://github.com/legend-exp/MJDSigGen.jl/blob/master/examples/config/example.config) to get started. Next, you'll need a lookup table of drift velocities as in [`drift\_vel\_torr.tab`](https://github.com/legend-exp/MJDSigGen.jl/blob/master/examples/config/drift_vel_tcorr.tab). See that the *drift_name* field in the config file matches the relative path from the config to the velocity table file.
 
 Now we can start using MJDSigGen. If you haven't installed it already, install it as follows:
 
@@ -29,7 +29,7 @@ We can now start simulating signals. Initialise a `SigGenSetup` object like so:
 julia> setup = SigGenSetup("examples/config/example.config");
 ```
 
-To simulate a signal produced by a drifting charge cluster starting at `(10, 10, 10)`, do:
+To simulate a signal produced by a drifting charge cluster starting at `(10, 10, 10)` (x, y, z), do:
 
 ```julia
 julia> get_signal!(setup, (10, 10, 10))
@@ -65,4 +65,4 @@ julia> setup.instant_vel_h
   0.0         0.0        0.0
 ```
 
-The three columns refer to x, y and z components respectively. Velocity is given in *step_time_calc* ns steps (see config), while the signal vector is given in *step_time_out* ns steps.
+The three columns refer to x, y and z components respectively. Velocity is given in *step\_time\_calc* ns steps (see config), while the signal vector is given in *step\_time\_out* ns steps.
