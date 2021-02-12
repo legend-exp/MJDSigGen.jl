@@ -23,7 +23,7 @@ of the author.
 
 ## Basic Usage
 
-To get started you'll need a config file to specify detector geometry and some simulation parameters. See the [example.config](examples/config/example.config) to get started. Next, you'll need a lookup table of drift velocities as in [drift_vel_torr.tab](examples/config/drift_vel_torr.tab). See that the *drift_name* field in the config file matches the relative path from the config to the velocity table file.
+To get started you'll need a config file to specify detector geometry and some simulation parameters. See the [example.config](examples/config/example.config) to get started. Next, you'll need a lookup table of drift velocities as in [drift_vel_torr.tab](examples/config/drift_vel_tcorr.tab). See that the *drift_name* field in the config file matches the relative path from the config to the velocity table file.
 
 Now we can start using MJDSigGen. If you haven't installed it already, install it as follows:
 
