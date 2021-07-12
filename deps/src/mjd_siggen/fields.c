@@ -798,11 +798,11 @@ static int setup_C(MJD_Siggen_Setup *setup) {
   free(wp_file_name); wp_file_name = NULL;
   TELL_NORMAL("Reading capacitance from file: %s\n", setup->wp_name);
   
-  char keyword[16] = "# Capacitance at";
+  char keyword[] = "# Capacitance at";
   while (fgets(line, sizeof(line), fp)) {
 
     if (strncmp(line, keyword, strlen(keyword)) == 0) {
-        sscanf( line, "# Capacitance at %.1f V : %.2f pF", &HV, &capacitance);
+        sscanf( line, "# Capacitance at %f V : %f pF", &HV, &capacitance);
     }
 
   }
