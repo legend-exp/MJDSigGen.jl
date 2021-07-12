@@ -77,6 +77,7 @@ mutable struct SigGenSetup
     impurity_radial_mult::Cfloat
     impurity_rpower::Cfloat
     xtal_HV::Cfloat
+    capacitance::Cfloat
     max_iterations::Cint
     write_field::Cint
     write_WP::Cint

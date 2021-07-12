@@ -1114,6 +1114,7 @@ int main(int argc, char **argv)
   // 0.01 converts (V/cm)^2 to (V/mm)^2, pow() converts to grid^3 to mm3
   esum2 *= 2.0 * pi * 0.1 * Epsilon * pow(grid, 2.0);
   // 0.1 converts (V/cm) to (V/mm),  grid^2 to  mm2
+  setup.capacitance = esum2;
   printf("\n  >>  Calculated capacitance at %.0f V: %.3lf pF\n", BV, esum);
   if (j==0) {
     printf("  >>  Alternative calculation of capacitance: %.3lf pF\n\n", esum2);
