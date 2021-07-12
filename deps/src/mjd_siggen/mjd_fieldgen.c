@@ -1135,7 +1135,7 @@ int main(int argc, char **argv)
     /* copy configuration parameters to output file */
     report_config(file, config_file_name);
     fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", BV);
-    fprintf(file, "# Capacitance at %.1f V : %.2f \n", BV, setup.capacitance);
+    fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", BV, setup.capacitance);
     if (fully_depleted) {
       fprintf(file, "# Detector is fully depleted.\n");
     } else {
