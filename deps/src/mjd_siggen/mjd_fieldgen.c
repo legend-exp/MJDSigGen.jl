@@ -1114,6 +1114,7 @@ int main(int argc, char **argv)
   // 0.01 converts (V/cm)^2 to (V/mm)^2, pow() converts to grid^3 to mm3
   esum2 *= 2.0 * pi * 0.1 * Epsilon * pow(grid, 2.0);
   // 0.1 converts (V/cm) to (V/mm),  grid^2 to  mm2
+  setup.capacitance = esum;
   printf("\n  >>  Calculated capacitance at %.0f V: %.3lf pF\n", BV, esum);
   if (j==0) {
     printf("  >>  Alternative calculation of capacitance: %.3lf pF\n\n", esum2);
@@ -1134,6 +1135,7 @@ int main(int argc, char **argv)
     /* copy configuration parameters to output file */
     report_config(file, config_file_name);
     fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", BV);
+    fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", BV, setup.capacitance);
     if (fully_depleted) {
       fprintf(file, "# Detector is fully depleted.\n");
     } else {

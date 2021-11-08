@@ -88,6 +88,7 @@ typedef struct {
   float impurity_radial_mult; // multiplicative radial impurity at outside radius (neutral=1.0)
   float impurity_rpower;      // power for radial impurity increase with radius
   float xtal_HV;              // detector bias for fieldgen, in Volts
+  float capacitance;          // detector capacitance at xtal_HV
   int   max_iterations;       // maximum number of iterations to use in mjd_fieldgen
   int   write_field;          // set to 1 to write V and E to output file, 0 otherwise
   int   write_WP;             // set to 1 to calculate WP and write it to output file, 0 otherwise
