@@ -1,6 +1,8 @@
 The MJDSigGen.jl package is licensed under the MIT "Expat" License:
 
-> Copyright (c) 2017: Oliver Schulz.
+> Copyright (c) 2017:
+>
+>    Oliver Schulz <oschulz@mpp.mpg.de> and contributors
 >
 > Includes mjd_siggen code copyright (c) David Radford.
 > 

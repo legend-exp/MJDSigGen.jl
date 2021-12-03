@@ -7,6 +7,14 @@
 using Documenter
 using MJDSigGen
 
+# Doctest setup
+DocMeta.setdocmeta!(
+    MJDSigGen,
+    :DocTestSetup,
+    :(using MJDSigGen);
+    recursive=true,
+)
+
 makedocs(
     sitename = "MJDSigGen",
     modules = [MJDSigGen],

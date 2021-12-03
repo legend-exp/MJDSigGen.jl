@@ -1,11 +1,5 @@
 # API
 
-```@meta
-DocTestSetup  = quote
-    using MJDSigGen
-end
-```
-
 ## Modules
 
 ```@index
