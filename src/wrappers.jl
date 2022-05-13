@@ -123,7 +123,7 @@ function fieldgen(config_filename::AbstractString)
     mkpath(dirname(joinpath(dirname(config_filename), setup.field_name)))
     mkpath(dirname(joinpath(dirname(config_filename), setup.wp_name)))
 
-    run(`$fieldgen_exe -c $config_filename`)
+    run(`$fieldgen_exe $config_filename`)
 end
 
 
