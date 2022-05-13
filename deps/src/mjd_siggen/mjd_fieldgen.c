@@ -496,7 +496,7 @@ int write_ev(MJD_Siggen_Setup *setup) {
   /* copy configuration parameters to output file */
   report_config(file, setup->config_file_name);
   fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", setup->xtal_HV);
-  fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", setup->xtal_HV, setup.capacitance);
+  fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", setup->xtal_HV, setup->capacitance);
 
   if (setup->fully_depleted) {
     fprintf(file, "# Detector is fully depleted.\n");

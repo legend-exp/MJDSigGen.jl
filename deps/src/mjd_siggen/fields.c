@@ -72,7 +72,7 @@ if (setup_velo(setup) != 0){
 
   if (setup_C(setup) != 0){
     error("Failed to read capacitance, config file: %s\n",
-	  setup->config_name);
+	  setup->config_file_name);
     return -1;
   }
 

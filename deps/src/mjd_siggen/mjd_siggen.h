@@ -96,7 +96,6 @@ typedef struct {
   int   bulletize_PC;         // set to 1 for inside of point contact hemispherical, 0 for cylindrical
 
   // file names
-  char config_name[256];      // config file setup was loaded from
   char drift_name[256];       // drift velocity lookup table
   char field_name[256];       // potential/efield file name
   char wp_name[256];          // weighting potential file name
@@ -138,6 +137,7 @@ typedef struct {
   cyl_pt **efld;
   float  **wpot;
 
+  char   config_file_name[256];
   
   // data for calc_signal.c
   point *dpath_e, *dpath_h;      // electron and hole drift paths
