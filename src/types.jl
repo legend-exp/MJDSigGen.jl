@@ -56,16 +56,21 @@ mutable struct SigGenSetup
     ditch_depth::Cfloat
     ditch_thickness::Cfloat
     bottom_taper_length::Cfloat
+    taper_length::Cfloat
     hole_length::Cfloat
     hole_radius::Cfloat
+    hole_bullet_radius::Cfloat
     outer_taper_length::Cfloat
     taper_angle::Cfloat
     inner_taper_length::Cfloat
     outer_taper_width::Cfloat
     inner_taper_width::Cfloat
+    hole_length_gap::Cfloat
     top_bullet_radius::Cfloat
     bottom_bullet_radius::Cfloat
     Li_thickness::Cfloat
+    vacuum_gap::Cfloat
+    surface_drift_vel_factor::Cfloat
 
     # electric fields & weighing potentials
     xtal_grid::Cfloat
