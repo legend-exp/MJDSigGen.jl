@@ -77,7 +77,6 @@
    returns 0 for success
 */
 int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
-	signal_calc_finalize(setup);
 	
 	if (read_config(config_file_name, setup)) return 1;
 	
@@ -197,14 +196,14 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
 				for (k = l; k < 2*dt; k+=l) {
 					x = ((float) k)/w;
 					y = exp(-x*x/2.0);
-					for (j = 0; j < tsteps - k; j++) {
+					for (j = 0; j < tsteps - k; j++){
 						sum[j] += y;
 						tmp[j] += signal[j+k] * y;
 						sum[j+k] += y;
 						tmp[j+k] += signal[j] * y;
 					}
 				}
-				for (j = 0; j < tsteps; j++) {
+				for (j = 0; j < tsteps; j++){
 					signal[j] = tmp[j]/sum[j];
 				}
 			}
@@ -232,16 +231,15 @@ int get_signal(point pt, float *signal_out, MJD_Siggen_Setup *setup) {
    Generates the signal originating at point pt, for charge q
    returns 0 for success
 */
-int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup) 
-{
-	static float wpot, wpot_old, dwpot;
+int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup) {
+	float  wpot, wpot2=0, dwpot=0;
 	char   tmpstr[MAX_LINE];
 	point  new_pt;
   	vector v, dx;
-  	float  vel0, vel1 = 0;
+  	float  vel0, vel1 = 0, wpot_old=-1;
   	// double diffusion_coeff;
   	double repulsion_fact = 0.0, ds2, ds3, dv, ds_dt;
-  	int    ntsteps, i, t, n, collect2pc, low_field=0;
+  	int    ntsteps, i, t, n, collect2pc, low_field=0, surface_drift=0, stop_drifting = 0;
 
   	new_pt = pt;
   	collect2pc = ((q > 0 && setup->impurity_z0 < 0) ||  // holes for p-type 
@@ -254,7 +252,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
   	}
   	*/
   	ntsteps = setup->time_steps_calc;
-  	for (t = 0; drift_velocity(new_pt, q, &v, setup) >= 0; t++) { 
+	for (t = 0; drift_velocity(new_pt, q, &v, setup) >= 0 && !stop_drifting; t++) { 
 		if (q > 0) {
 			setup->dpath_h[t] = new_pt;
 			setup->instant_vel_h[t].x = v.x;
@@ -267,7 +265,7 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 			setup->instant_vel_e[t].y = v.y;
 			setup->instant_vel_e[t].z = v.z;
 		}
-    	
+
 		if (collect2pc) {
 			if (t == 0) {
 				vel1 = setup->final_vel = setup->initial_vel = vector_length(v);
@@ -365,64 +363,100 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup)
 				pt_to_str(tmpstr, MAX_LINE, new_pt));
 			return -1;
 		}
+	    if (wpot < 0.0) wpot = 0.0;
 		TELL_CHATTY(" -> wp: %.4f\n", wpot);
+
+    	/* ------------- DCR added Oct 2019: if WP is very small or large, then stop drifting */
+    	if (!collect2pc &&    wpot < 5.0e-5) stop_drifting = 2;    // drifting to outside
+    	if (collect2pc && 1.0-wpot < 5.0e-5) stop_drifting = 3;    // drifting to point contact
+    	if (t >= setup->time_steps_calc - 2) stop_drifting = 1;    // have run out of time...
+
 		if (t > 0) signal[t] += q*(wpot - wpot_old);
-		
-		// FIXME? Hack added by DCR to deal with undepleted point contact
+		// FIXME! Hack added by DCR to deal with undepleted point contact
 		if (wpot >= 0.999 && (wpot - wpot_old) < 0.0002) {
 			low_field = 1;
 			break;
 		}
 		wpot_old = wpot;
+
 		dx = vector_scale(v, setup->step_time_calc);
+		if (surface_drift && dx.z < 0) {
+      		dx.x *= setup->surface_drift_vel_factor;  // Hmmm... should the default be zero or one?
+      		dx.y *= setup->surface_drift_vel_factor;
+      		dx.z = 0;
+    	}
 		new_pt = vector_add(new_pt, dx);
 		// q = charge_trapping(dx, q); //FIXME
+		
+		// look for charges on passivated surface of a PPC detector
+    	if (new_pt.z < 0 &&                                    // at or below surface, and
+        (setup->wrap_around_radius <= setup->pc_radius ||  // this is a PPC detector
+         new_pt.x*new_pt.x + new_pt.y*new_pt.y <           // or point is inside wrap-around
+         setup->wrap_around_radius*setup->wrap_around_radius)) {
+      		TELL_CHATTY(" -> Passivated surface! q = %.2f  r = %.2f\n",
+                  q, sqrt(new_pt.x*new_pt.x + new_pt.y*new_pt.y));
+      		//break;
+      		surface_drift = 1;
+      		new_pt.z = 0;
+   		}
+
 	} // end of for loop
   
 	if (t == 0) {
-		TELL_CHATTY("The starting point %s is outside the field.\n",
+    	TELL_CHATTY("The starting point %s is outside the WP or field.\n",
 			pt_to_str(tmpstr, MAX_LINE, pt));
 		return -1;
 	}
 
 	if (low_field) {
-		TELL_CHATTY("Too many time steps or low field; this may or may not be a problem.\n");
+    	TELL_CHATTY("Low field near point contact; this may or may not be a problem.\n");
 	} else {
-    		TELL_CHATTY("Drifted to edge of field grid, point: %s q: %.2f\n", 
+    	TELL_CHATTY("Drifted to edge of WP or field grid, point: %s q: %.2f\n", 
 		pt_to_str(tmpstr, MAX_LINE, new_pt), q);
-    	/* now we are outside the electric grid. figure out how much we must
-    	drift to get to the crystal boundary */
-		for (n = 0; n+t < ntsteps; n++){
+	}
+	if (!low_field && stop_drifting<2) {
+		/* figure out how much we must drift to get to the crystal boundary */
+    	for (n = 0; n+t < ntsteps && !outside_detector(new_pt, setup); n++){
 			new_pt = vector_add(new_pt, dx);
 			if (q > 0) setup->dpath_h[t+n] = new_pt;
 			else setup->dpath_e[t+n] = new_pt;
-			if (outside_detector(new_pt, setup)) break;
 		}
-    		if (n == 0) n = 1; /* always drift at least one more step */
-    		// TELL_CHATTY(
-    		TELL_NORMAL("q: %.1f t: %d n: %d ((%.2f %.2f %.2f)=>(%.2f %.2f %.2f))\n", 
-		q, t, n, pt.x, pt.y, pt.z, new_pt.x, new_pt.y, new_pt.z);
-    		if (n + t >= ntsteps){
-      			if (q > 0 || wpot > WP_THRESH_ELECTRONS) { /* hole or electron+high wp */
+    	if (n == 0) n = 1; /* always drift at least one more step */
+    	// TELL_CHATTY(
+    	TELL_NORMAL("q: %.1f t: %d n: %d ((%.2f %.2f %.2f)=>(%.2f %.2f %.2f))\n", 
+			q, t, n, pt.x, pt.y, pt.z, new_pt.x, new_pt.y, new_pt.z);
+
+    	if (n + t >= ntsteps){
+      		n = ntsteps - t;
+      		if (q > 0 || wpot > WP_THRESH_ELECTRONS) { /* hole or electron+high wp */
 				TELL_CHATTY("Exceeded maximum number of time steps (%d)\n", ntsteps);
-				return -1;  /* FIXME DCR: does this happen? could this be improved? */
-      			}
-      			n = ntsteps -t;
-		}
-		/* make WP go gradually to 1 or 0 */
-    	if (wpot > 0.3) {
-      		dwpot = (1.0 - wpot)/n;
+        		/* check WP to see if we have produced most of the signal */
+        		if ((wpot < 0.95 || wpot > 0.05) &&
+         			wpotential(new_pt, &wpot2, setup) != 0) {
+          			TELL_CHATTY("Cannot finish drifting to make at least 95\% of signal.\n");
+          			return -1;  /* FIXME: could this be improved? */
+        		}
+        		/* drift to new_pt and wpot2 */
+        		dwpot = (wpot2 - wpot)/n;
+      		}
     	} else {
-      		dwpot = - wpot/n;
+      		/* make WP go gradually to 1 or 0 */
+      		if (wpot > 0.3) {
+        		dwpot = (1.0 - wpot)/n;
+      		} else {
+        		dwpot = - wpot/n;
+      		}
     	}
-		/*now drift the final n steps*/
-		dx = vector_scale(v, setup->step_time_calc);
-		for (i = 0; i < n; i++) {
-			signal[i+t] += q*dwpot;
-			// q = charge_trapping(dx, q); //FIXME
-		}
+
+    	/* now drift the final n steps */
+    	dx = vector_scale(v, setup->step_time_calc);
+    	if (new_pt.z > 0) {               // charges NOT on passivated surface
+      		for (i = 0; i < n; i++){
+        		signal[i+t] += q*dwpot;
+        		// q = charge_trapping(dx, q); //FIXME
+      		}
+    	}
 	}
-		
 	TELL_CHATTY("q:%.2f pt: %s\n", q, pt_to_str(tmpstr, MAX_LINE, pt));
 	if (q > 0) setup->final_vel = vector_length(v);
 

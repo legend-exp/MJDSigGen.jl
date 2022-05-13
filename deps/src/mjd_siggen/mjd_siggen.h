@@ -14,7 +14,6 @@
 #define NORMAL 1
 #define CHATTY 2
 
-// #define VERBOSE 2  // Set to 0 for quiet, 1 or 2 for less or more info
 #define TELL_NORMAL if (setup->verbosity >= NORMAL) tell
 #define TELL_CHATTY if (setup->verbosity >= CHATTY) tell
 
@@ -27,8 +26,8 @@
 #define CYL 0
 #define CART 1
 
-float sqrtf(float x);
-float fminf(float x, float y);
+//float sqrtf(float x);
+//float fminf(float x, float y);
 
 // from fields.c
 struct velocity_lookup{
@@ -76,7 +75,9 @@ typedef struct {
   float inner_taper_width;    // r-width of inside (hole) taper at far top of crystal
   float top_bullet_radius;    // bulletization radius at top of crystal
   float bottom_bullet_radius; // bulletization radius at bottom of BEGe crystal
+  float hole_bullet_radius;   // bulletization radius at bottom of hole
   float Li_thickness;         // depth of full-charge-collection boundary for Li contact
+  float vacuum_gap;           // vacuum gap from passivated surface to ground plane (e.g. IR shield)
 
   // electric fields & weighing potentials
   float xtal_grid;            // grid size in mm for field files (either 0.5 or 0.1 mm)
@@ -122,11 +123,25 @@ typedef struct {
   int   rlen, zlen;           // dimensions of efld and wpot arrays
   int   v_lookup_len;
   struct velocity_lookup *v_lookup;
+
+  //for fieldgen:
+  double **v[2];
+  double **eps, **eps_dr, **eps_dz, **impurity;
+  double **vfraction, *s1, *s2, **vsave;
+  char   **point_type, **undepleted;
+  int    fully_depleted;
+  float  bubble_volts, Emin;
+  float  rho_z_spe[1024];
+  double **dr[2], **dz[2];
+
+  //for siggen:
   cyl_pt **efld;
   float  **wpot;
+
   
   // data for calc_signal.c
   point *dpath_e, *dpath_h;      // electron and hole drift paths
+  float surface_drift_vel_factor;  // ratio of velocity on passivated surface rather than in bulk
   point *instant_vel_e;          // instant vel of holes
   point *instant_vel_h;          // instant vel of electrons
   float *instant_charge_size_e;  // instant charge cloud size (holes)
@@ -138,9 +153,7 @@ typedef struct {
 
 } MJD_Siggen_Setup;
 
-
+enum point_types{PC, HVC, INSIDE, PASSIVE, PINCHOFF, DITCH, DITCH_EDGE, CONTACT_EDGE};
 int read_config(char *config_file_name, MJD_Siggen_Setup *setup);
-
-char* resolve_path_rel_to(const char* path, const char* ref_filename);
 
 #endif /*#ifndef _MJD_SIGGEN_H */
