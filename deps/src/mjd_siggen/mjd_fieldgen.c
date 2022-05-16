@@ -245,6 +245,9 @@ int main(int argc, char **argv)
     printf("  >>  Calculated capacitance at %.0f V: %.3lf pF\n", BV, esum);
     if (!test)
       printf("  >>  Alternative calculation of capacitance: %.3lf pF\n", esum2);
+      
+    if (setup.write_WP) write_wp(&setup); // re-write wp file with capacitance
+  
   }
 
   /* -------------- estimate depletion voltage */
@@ -496,7 +499,6 @@ int write_ev(MJD_Siggen_Setup *setup) {
   /* copy configuration parameters to output file */
   report_config(file, setup->config_file_name);
   fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", setup->xtal_HV);
-  fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", setup->xtal_HV, setup->capacitance);
 
   if (setup->fully_depleted) {
     fprintf(file, "# Detector is fully depleted.\n");
@@ -643,6 +645,8 @@ int write_ev(MJD_Siggen_Setup *setup) {
   /* copy configuration parameters to output file */
   report_config(file, setup->config_file_name);
   fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", setup->xtal_HV);
+  fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", setup->xtal_HV, setup->capacitance);
+
   if (setup->fully_depleted) {
     fprintf(file, "# Detector is fully depleted.\n");
   } else {
