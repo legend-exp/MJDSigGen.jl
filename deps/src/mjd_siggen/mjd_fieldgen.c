@@ -490,7 +490,7 @@ int write_ev(MJD_Siggen_Setup *setup) {
   }
 
   /* write potential and field to output file */
-  char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_name);
+  char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_file_name);
   if (!(file = fopen(field_file_name, "w"))) {
     printf("ERROR: Cannot open file %s for electric field...\n", field_file_name);
     return 1;
@@ -636,7 +636,7 @@ int write_ev(MJD_Siggen_Setup *setup) {
   float  r, z, w;
   FILE *file;
 
-  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_name);
+  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_file_name);
   if (!(file = fopen(wp_file_name, "w"))) {
     printf("ERROR: Cannot open file %s for weighting potential...\n", wp_file_name);
     return 1;
