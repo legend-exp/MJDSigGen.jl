@@ -141,7 +141,7 @@ mutable struct SigGenSetup
     efld::Ptr{Ptr{CylPoint{Cfloat}}}
     wpot::Ptr{Ptr{Cfloat}}
     
-    config_name::NTuple{256,Cchar}
+    config_file_name::NTuple{256,Cchar}
     
     # data for calc_signal.c
     dpath_e::Ptr{CartPoint{Cfloat}}
@@ -179,7 +179,7 @@ function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
 end
 
 function Base.getproperty(setup::SigGenSetup, sym::Symbol)
-    if sym in (:config_name, :drift_name, :field_name, :wp_name)
+    if sym in (:config_file_name, :drift_name, :field_name, :wp_name)
         return tup2str(getfield(setup, sym))
     elseif sym in (:dpath_e, :dpath_h, :instant_vel_e, :instant_vel_h)
         ptr = getfield(setup, sym)

@@ -35,7 +35,7 @@ using Test, MJDSigGen, DelimitedFiles
                 @test setup.xtal_HV        == 3500
                 @test setup.max_iterations == 30000
 
-                @test setup.config_name == config_file
+                @test setup.config_file_name == config_file
                 @test setup.drift_name  == "./drift_vel_tcorr.tab"
                 @test setup.field_name  == "../fields/ev_example.dat"
                 @test setup.wp_name     == "../fields/wp_example.dat"
