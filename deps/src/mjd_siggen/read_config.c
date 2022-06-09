@@ -83,6 +83,10 @@ int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
     printf("\nERROR: config file %s does not exist?\n", config_file_name);
     return 1;
   }
+
+  /* store config file name */
+  strncpy(setup->config_file_name, config_file_name, 256);
+
   /* read config file */
   printf("\nReading values from config file %s\n", config_file_name);
   while (fgets(line, sizeof(line), file)) {
