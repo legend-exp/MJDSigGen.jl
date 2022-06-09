@@ -36,7 +36,8 @@ static int efield_exists(cyl_pt pt, MJD_Siggen_Setup *setup);
    returns 0 for success
 */
 int field_setup(MJD_Siggen_Setup *setup){
-
+  fields_finalize(setup);
+  
   setup->rmin  = 0;
   setup->rmax  = setup->xtal_radius;
   setup->rstep = setup->xtal_grid;

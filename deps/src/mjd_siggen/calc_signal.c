@@ -77,6 +77,7 @@
    returns 0 for success
 */
 int signal_calc_init(char *config_file_name, MJD_Siggen_Setup *setup) {
+	signal_calc_finalize(setup);
 	
 	if (read_config(config_file_name, setup)) return 1;
 	
