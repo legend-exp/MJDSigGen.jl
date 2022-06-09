@@ -37,7 +37,7 @@ static int efield_exists(cyl_pt pt, MJD_Siggen_Setup *setup);
 */
 int field_setup(MJD_Siggen_Setup *setup){
   fields_finalize(setup);
-  
+
   setup->rmin  = 0;
   setup->rmax  = setup->xtal_radius;
   setup->rstep = setup->xtal_grid;
@@ -493,8 +493,9 @@ static int setup_velo(MJD_Siggen_Setup *setup){
     v_lookup = setup->v_lookup;
   }
 
-  if ((fp = fopen(setup->drift_name, "r")) == NULL){
-    error("failed to open velocity lookup table file: '%s'\n", setup->drift_name);
+  char *drift_file_name = resolve_path_rel_to(setup->drift_name, setup->config_name);
+  if ((fp = fopen(drift_file_name, "r")) == NULL){
+    error("failed to open velocity lookup table file: '%s'\n", drift_file_name);
     return -1;
   }
   line[0] = '#';
@@ -668,8 +669,9 @@ static int setup_efield(MJD_Siggen_Setup *setup){
   float  v, eabs, er, ez;
   cyl_pt cyl, **efld;
 
-  if ((fp = fopen(setup->field_name, "r")) == NULL){
-    error("failed to open electric field table: %s\n", setup->field_name);
+  char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_name);
+  if ((fp = fopen(field_file_name, "r")) == NULL){
+    error("failed to open electric field table: %s\n", field_file_name);
     return 1;
   }
   
@@ -778,8 +780,9 @@ static int setup_wp(MJD_Siggen_Setup *setup){
     }
     memset(wpot[i], 0, setup->zlen*sizeof(*wpot[i]));
   }
-  if ((fp = fopen(setup->wp_name, "r")) == NULL){
-    error("failed to open file: %s\n", setup->wp_name);
+  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_name);
+  if ((fp = fopen(wp_file_name, "r")) == NULL){
+    error("failed to open file: %s\n", wp_file_name);
     return -1;
   }
   lineno = 0;
@@ -842,8 +845,10 @@ static int setup_C(MJD_Siggen_Setup *setup) {
   char  line[256];
 
   float HV, capacitance;
-  if ((fp = fopen(setup->wp_name, "r")) == NULL){
-    error("failed to open file: %s\n", setup->wp_name);
+
+  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_name);
+  if ((fp = fopen(wp_file_name, "r")) == NULL){
+    error("failed to open file: %s\n", wp_file_name);
     return -1;
   }
   TELL_NORMAL("Reading capacitance from file: %s\n", setup->wp_name);

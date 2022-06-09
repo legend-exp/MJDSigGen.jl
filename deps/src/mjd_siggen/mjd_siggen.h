@@ -156,4 +156,6 @@ typedef struct {
 enum point_types{PC, HVC, INSIDE, PASSIVE, PINCHOFF, DITCH, DITCH_EDGE, CONTACT_EDGE};
 int read_config(char *config_file_name, MJD_Siggen_Setup *setup);
 
+char* resolve_path_rel_to(const char* path, const char* ref_filename);
+
 #endif /*#ifndef _MJD_SIGGEN_H */

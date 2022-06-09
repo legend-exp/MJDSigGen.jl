@@ -490,11 +490,12 @@ int write_ev(MJD_Siggen_Setup *setup) {
   }
 
   /* write potential and field to output file */
-  if (!(file = fopen(setup->field_name, "w"))) {
-    printf("ERROR: Cannot open file %s for electric field...\n", setup->field_name);
+  char *field_file_name = resolve_path_rel_to(setup->field_name, setup->config_name);
+  if (!(file = fopen(field_file_name, "w"))) {
+    printf("ERROR: Cannot open file %s for electric field...\n", field_file_name);
     return 1;
   } else {
-    printf("Writing electric field data to file %s\n", setup->field_name);
+    printf("Writing electric field data to file %s\n", field_file_name);
   }
   /* copy configuration parameters to output file */
   report_config(file, setup->config_file_name);
@@ -635,11 +636,12 @@ int write_ev(MJD_Siggen_Setup *setup) {
   float  r, z, w;
   FILE *file;
 
-  if (!(file = fopen(setup->wp_name, "w"))) {
-    printf("ERROR: Cannot open file %s for weighting potential...\n", setup->wp_name);
+  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_name);
+  if (!(file = fopen(wp_file_name, "w"))) {
+    printf("ERROR: Cannot open file %s for weighting potential...\n", wp_file_name);
     return 1;
   } else {
-    printf("Writing weighting potential to file %s\n\n", setup->wp_name);
+    printf("Writing weighting potential to file %s\n\n", wp_file_name);
   }
 
   /* copy configuration parameters to output file */
