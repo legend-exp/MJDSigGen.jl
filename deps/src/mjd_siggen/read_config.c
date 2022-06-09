@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 #include "mjd_siggen.h"
 
 int read_config(char *config_file_name, MJD_Siggen_Setup *setup) {
