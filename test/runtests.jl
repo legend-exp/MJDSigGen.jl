@@ -73,11 +73,11 @@ using Test, MJDSigGen, DelimitedFiles
             # 0 <= wp <= 1
             @test all(p -> 0 <= p <= 1, view(wpot_data, :, 3))
 
-            # E^2 = E_z^2 + E_r^2 (within 5%)
+            # E^2 = E_z^2 + E_r^2 (within 10%)
             @test all(eachrow(view(field_data, :, 4:6))) do v 
                 E, E_r, E_z = v
                 d = abs((E^2 - E_r^2 - E_z^2))
-                return E == 0 ? d ≈ 0 : sqrt(d / E^2) < 0.05
+                return E == 0 ? d ≈ 0 : sqrt(d / E^2) < 0.1
             end
 
             # read_fields
