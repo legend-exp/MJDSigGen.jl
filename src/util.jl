@@ -1,7 +1,7 @@
 # This file is a part of MJDSigGen, licensed under the MIT License (MIT).
 
 function read_fields(setup::SigGenSetup)
-    config_dir = dirname(setup.config_name)
+    config_dir = dirname(setup.config_file_name)
     field_data = readdlm(joinpath(config_dir, setup.field_name), comments=true)
     wpot_data = readdlm(joinpath(config_dir, setup.wp_name), comments=true)
 

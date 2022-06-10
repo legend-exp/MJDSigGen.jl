@@ -65,7 +65,9 @@ mutable struct SigGenSetup
     inner_taper_width::Cfloat
     top_bullet_radius::Cfloat
     bottom_bullet_radius::Cfloat
+    hole_bullet_radius::Cfloat
     Li_thickness::Cfloat
+    vacuum_gap::Cfloat
 
     # electric fields & weighing potentials
     xtal_grid::Cfloat
@@ -84,11 +86,10 @@ mutable struct SigGenSetup
     bulletize_PC::Cint
 
     # file names
-    config_name::NTuple{256,Cchar}
     drift_name::NTuple{256,Cchar}
     field_name::NTuple{256,Cchar}
     wp_name::NTuple{256,Cchar}
-
+    
     # signal calculation 
     xtal_temp::Cfloat
     preamp_tau::Cfloat
@@ -100,10 +101,10 @@ mutable struct SigGenSetup
     use_repulsion::Cint
     use_diffusion::Cint
     energy::Cfloat
-
+    
     coord_type::Cint
     ntsteps_out::Cint
-
+    
     # data for fields.c
     rmin::Cfloat
     rmax::Cfloat
@@ -115,12 +116,37 @@ mutable struct SigGenSetup
     zlen::Cint
     v_lookup_len::Cint
     v_lookup::Ptr{VelocityLookup}
+
+    # for fieldgen:
+    v::NTuple{2,Ptr{Ptr{Cdouble}}}
+    eps::Ptr{Ptr{Cdouble}}
+    eps_dr::Ptr{Ptr{Cdouble}}
+    eps_dz::Ptr{Ptr{Cdouble}}
+    impurity::Ptr{Ptr{Cdouble}}
+    vfraction::Ptr{Ptr{Cdouble}}
+    s1::Ptr{Ptr{Cdouble}}
+    s2::Ptr{Ptr{Cdouble}}
+    vsave::Ptr{Ptr{Cdouble}}
+    point_type::Ptr{Ptr{Cchar}}
+    undepleted::Ptr{Ptr{Cchar}}
+    fully_depleted::Cint
+    bubble_volts::Cfloat
+    Emin::Cfloat
+    rho_z_spe::NTuple{1024,Cfloat}
+    dr::NTuple{2,Ptr{Ptr{Cdouble}}}
+    dz::NTuple{2,Ptr{Ptr{Cdouble}}}
+
+
+    # for siggen
     efld::Ptr{Ptr{CylPoint{Cfloat}}}
     wpot::Ptr{Ptr{Cfloat}}
-
+    
+    config_file_name::NTuple{256,Cchar}
+    
     # data for calc_signal.c
     dpath_e::Ptr{CartPoint{Cfloat}}
     dpath_h::Ptr{CartPoint{Cfloat}}
+    surface_drift_vel_factor::Cfloat
     instant_vel_e::Ptr{CartPoint{Cfloat}}
     instant_vel_h::Ptr{CartPoint{Cfloat}}
     instant_charge_size_e::Ptr{Cfloat}
@@ -153,7 +179,7 @@ function tup2str(tup::NTuple{N,C}) where {N, C<:Union{AbstractChar, Cchar}}
 end
 
 function Base.getproperty(setup::SigGenSetup, sym::Symbol)
-    if sym in (:config_name, :drift_name, :field_name, :wp_name)
+    if sym in (:config_file_name, :drift_name, :field_name, :wp_name)
         return tup2str(getfield(setup, sym))
     elseif sym in (:dpath_e, :dpath_h, :instant_vel_e, :instant_vel_h)
         ptr = getfield(setup, sym)
