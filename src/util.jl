@@ -5,8 +5,8 @@ function read_fields(setup::SigGenSetup)
     field_data = readdlm(joinpath(config_dir, setup.field_name), comments=true)
     wpot_data = readdlm(joinpath(config_dir, setup.wp_name), comments=true)
 
-    Nr::Int = setup.xtal_radius / setup.xtal_grid + 1
-    Nz::Int = setup.xtal_length / setup.xtal_grid + 1
+    Nr::Int = round(setup.xtal_radius / setup.xtal_grid) + 1
+    Nz::Int = round(setup.xtal_length / setup.xtal_grid) + 1
     N = Nz * Nr
 
     @assert size(field_data, 1) == size(wpot_data, 1) == N
