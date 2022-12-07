@@ -125,6 +125,8 @@ function fieldgen(config_filename::AbstractString; BV=0, impurity_profile="", of
 
     if BV!=0
 	setup.xtal_HV = BV 
+    else
+	BV = setup.xtal_HV
     end
 	
     if(impurity_profile!="")
