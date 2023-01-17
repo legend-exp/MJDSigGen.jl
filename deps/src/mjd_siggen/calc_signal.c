@@ -368,7 +368,8 @@ int make_signal(point pt, float *signal, float q, MJD_Siggen_Setup *setup) {
 		TELL_CHATTY(" -> wp: %.4f\n", wpot);
 
     	/* ------------- DCR added Oct 2019: if WP is very small or large, then stop drifting */
-    	if (!collect2pc &&    wpot < 5.0e-5) stop_drifting = 2;    // drifting to outside
+	/* ------------- TC modified Jan 2023: lowered WP to account for very large detectors */	
+    	if (!collect2pc &&    wpot < 2.0e-7) stop_drifting = 2;    // drifting to outside
     	if (collect2pc && 1.0-wpot < 5.0e-5) stop_drifting = 3;    // drifting to point contact
     	if (t >= setup->time_steps_calc - 2) stop_drifting = 1;    // have run out of time...
 
