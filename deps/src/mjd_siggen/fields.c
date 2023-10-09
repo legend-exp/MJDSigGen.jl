@@ -894,17 +894,23 @@ static int setup_depletion(MJD_Siggen_Setup *setup) {
   char keyword[] = "# Full depletion at";
   while (fgets(line, sizeof(line), fp)) {
     if (strncmp(line, keyword, strlen(keyword)) == 0) {
-        sscanf( line, "# Full depletion at", &depV);
+        sscanf( line, "# Full depletion at %f V", &depV);
     }
   }
+  fclose(wp_file_name);
 
   // read minimum E with coordinates
+  if ((fp = fopen(wp_file_name, "r")) == NULL){
+    error("failed to open file: %s\n", wp_file_name);
+    return -1;
+  }
   char keyword2[] = "# Minimum bulk field = ";
   while (fgets(line, sizeof(line), fp)) {
     if (strncmp(line, keyword, strlen(keyword)) == 0) {
         sscanf( line, "# Minimum bulk field = %f V/cm at (r,z) = (%f, %f) mm", &Emin, &rmin, &zmin);
     }
   }
+  fclose(wp_file_name);
 
   setup->depV = depV;
   setup->Emin = Emin;
