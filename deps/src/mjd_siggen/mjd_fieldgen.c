@@ -288,6 +288,7 @@ int main(int argc, char **argv)
                min2, (vminr-1)*grid, (vminz-1)*grid);
         printf("   Full depletion (max pinch-off voltage) = %.0f\n", BV - min2);
         min = min2;
+	  	setup.depV = BV-min;
       } else {
         printf("Estimated depletion voltage = %.0f V\n", BV - min);
 	  	setup.depV = BV-min;
