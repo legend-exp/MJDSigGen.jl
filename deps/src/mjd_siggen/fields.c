@@ -881,7 +881,6 @@ static int setup_depletion(MJD_Siggen_Setup *setup) {
   char  line[256];
 
   double depV;
-  float Emin, rmin, zmin;
 
   char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_file_name);
   if ((fp = fopen(wp_file_name, "r")) == NULL){
@@ -894,7 +893,7 @@ static int setup_depletion(MJD_Siggen_Setup *setup) {
   char keyword[] = "# Full depletion at";
   while (fgets(line, sizeof(line), fp)) {
     if (strncmp(line, keyword, strlen(keyword)) == 0) {
-        sscanf( line, "# Full depletion at %f V", &depV);
+        sscanf( line, "# Full depletion at %lf V", &depV);
     }
   }
 
