@@ -294,11 +294,11 @@ int main(int argc, char **argv)
       }
     }
 
+	write_wp(&setup); // re-write wp file with capacitance and depV
+
     printf("Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n\n",
            setup.Emin, setup.rmin, setup.zmin);	   
   }
-	
-  if (setup.write_WP) write_wp(&setup); // re-write wp file with capacitance and depV
 
 #ifdef EMIN_OVERBIAS
   // calculate a new minimum electric field at a specified bias above depletion (usually 500 V)
