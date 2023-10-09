@@ -246,8 +246,6 @@ int main(int argc, char **argv)
     if (!test)
       printf("  >>  Alternative calculation of capacitance: %.3lf pF\n", esum2);
       
-    if (setup.write_WP) write_wp(&setup); // re-write wp file with capacitance
-  
   }
 
   /* -------------- estimate depletion voltage */
@@ -297,8 +295,11 @@ int main(int argc, char **argv)
     }
 
     printf("Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n\n",
-           setup.Emin, setup.rmin, setup.zmin);
+           setup.Emin, setup.rmin, setup.zmin);	   
   }
+	
+  if (setup.write_field) write_ev(&setup); // re-write ev file with depletion voltage
+  if (setup.write_WP) write_wp(&setup); // re-write wp file with capacitance
 
 #ifdef EMIN_OVERBIAS
   // calculate a new minimum electric field at a specified bias above depletion (usually 500 V)
