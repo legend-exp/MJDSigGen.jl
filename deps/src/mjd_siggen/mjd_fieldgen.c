@@ -502,9 +502,7 @@ int write_ev(MJD_Siggen_Setup *setup) {
   report_config(file, setup->config_file_name);
   fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", setup->xtal_HV);
   fprintf(file, "# Full depletion at %.1f V\n", setup->depV);
-  fprintf(file, "\n Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n\n",
-           setup->Emin, setup->rmin, setup->zmin);
-		   
+
   if (setup->fully_depleted) {
     fprintf(file, "# Detector is fully depleted.\n");
   } else {
@@ -582,6 +580,9 @@ int write_ev(MJD_Siggen_Setup *setup) {
       }
     }
   }
+  
+  fprintf(file, "\n# Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n\n",
+           setup->Emin, setup->rmin, setup->zmin);
 
   if (strstr(setup->field_name, "unf")) {
     fprintf(file, "#\n## start of unformatted data\n");
