@@ -290,8 +290,8 @@ int main(int argc, char **argv)
         min = min2;
       } else {
         printf("Estimated depletion voltage = %.0f V\n", BV - min);
+	  	setup.depV = BV-min;
       }
-	  setup.depV = BV-min;
     }
 
     printf("Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n\n",
