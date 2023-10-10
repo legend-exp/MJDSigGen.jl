@@ -874,13 +874,15 @@ static int setup_C(MJD_Siggen_Setup *setup) {
 }
 
 /*setup_depletion
-  read depletion voltage from file 
+  read depletion voltage, minimum E field 
+  and its location from wp file 
   returns 0 on success*/
 static int setup_depletion(MJD_Siggen_Setup *setup) {
   FILE  *fp;
   char  line[256];
 
   double depV;
+  float Emin, rmin, zmin;
 
   char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_file_name);
   if ((fp = fopen(wp_file_name, "r")) == NULL){
@@ -889,15 +891,23 @@ static int setup_depletion(MJD_Siggen_Setup *setup) {
   }
   TELL_NORMAL("Reading depletion voltage from file: %s\n", setup->wp_name);
   
-  // read depletion voltage
+  // read depletion voltage, 
+  // minimum E field and location of minimum E field
   char keyword[] = "# Full depletion at";
+  char keyword2[] = "# Minimum bulk field =";
   while (fgets(line, sizeof(line), fp)) {
     if (strncmp(line, keyword, strlen(keyword)) == 0) {
         sscanf( line, "# Full depletion at %lf V", &depV);
     }
+    if (strncmp(line, keyword2, strlen(keyword2)) == 0) {
+        sscanf( line, "# Minimum bulk field = %f V/cm at (r,z) = (%f, %f) mm", &Emin, &rmin, &zmin);
+    }
   }
 
   setup->depV = depV;
+  setup->Emin = Emin;
+  setup->rmin = rmin;
+  setup->zmin = zmin;
 
   return 0;
 }
