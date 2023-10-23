@@ -117,16 +117,22 @@ end
 
 const fieldgen_exe = joinpath(dirname(@__FILE__), "..", "deps", "usr", "bin", "mjd_fieldgen")
 
-function fieldgen(config_filename::AbstractString; impurity_profile="", offset_mm=0)
+function fieldgen(config_filename::AbstractString; BV=0, impurity_profile="", offset_mm=0)
     setup = read_config(config_filename)
 
     mkpath(dirname(joinpath(dirname(config_filename), setup.field_name)))
     mkpath(dirname(joinpath(dirname(config_filename), setup.wp_name)))
 
-    if(impurity_profile!="")
-        run(`$fieldgen_exe $config_filename -w 1 -p 1 -d 1 -r $impurity_profile -z $offset_mm`)
+    if BV!=0
+	setup.xtal_HV = BV 
     else
-        run(`$fieldgen_exe $config_filename -w 1 -p 1 -d 1`)
+	BV = setup.xtal_HV
+    end
+	
+    if(impurity_profile!="")
+        run(`$fieldgen_exe $config_filename -b $BV -w 1 -p 1 -d 1 -r $impurity_profile -z $offset_mm`)
+    else
+        run(`$fieldgen_exe $config_filename -b $BV -w 1 -p 1 -d 1`)
     end
 end
 

@@ -246,8 +246,6 @@ int main(int argc, char **argv)
     if (!test)
       printf("  >>  Alternative calculation of capacitance: %.3lf pF\n", esum2);
       
-    if (setup.write_WP) write_wp(&setup); // re-write wp file with capacitance
-  
   }
 
   /* -------------- estimate depletion voltage */
@@ -290,13 +288,17 @@ int main(int argc, char **argv)
                min2, (vminr-1)*grid, (vminz-1)*grid);
         printf("   Full depletion (max pinch-off voltage) = %.0f\n", BV - min2);
         min = min2;
+	  	setup.depV = BV-min;
       } else {
         printf("Estimated depletion voltage = %.0f V\n", BV - min);
+	  	setup.depV = BV-min;
       }
     }
 
+	write_wp(&setup); // re-write wp file with capacitance and depV
+
     printf("Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n\n",
-           setup.Emin, setup.rmin, setup.zmin);
+           setup.Emin, setup.rmin, setup.zmin);	   
   }
 
 #ifdef EMIN_OVERBIAS
@@ -578,7 +580,7 @@ int write_ev(MJD_Siggen_Setup *setup) {
       }
     }
   }
-
+  
   if (strstr(setup->field_name, "unf")) {
     fprintf(file, "#\n## start of unformatted data\n");
     i = R-1; j = L-1;
@@ -647,10 +649,14 @@ int write_ev(MJD_Siggen_Setup *setup) {
   /* copy configuration parameters to output file */
   report_config(file, setup->config_file_name);
   fprintf(file, "#\n# HV bias in fieldgen: %.1f V\n", setup->xtal_HV);
-  fprintf(file, "# Capacitance at %.1f V : %.2f pF\n", setup->xtal_HV, setup->capacitance);
+  fprintf(file, "# Capacitance at %.1f V : %.2f pF\n#", setup->xtal_HV, setup->capacitance);
+  fprintf(file, "\n# Minimum bulk field = %.2f V/cm at (r,z) = (%.1f, %.1f) mm\n#",
+           setup->Emin, setup->rmin, setup->zmin);
 
   if (setup->fully_depleted) {
-    fprintf(file, "# Detector is fully depleted.\n");
+    fprintf(file, "\n# Detector is fully depleted.");
+	fprintf(file, "\n# Full depletion at %.1f V\n", setup->depV);
+
   } else {
     fprintf(file, "# Detector is not fully depleted.\n");
     if (setup->bubble_volts > 0.0f)

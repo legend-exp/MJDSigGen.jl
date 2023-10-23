@@ -129,6 +129,7 @@ typedef struct {
   double **vfraction, *s1, *s2, **vsave;
   char   **point_type, **undepleted;
   int    fully_depleted;
+  double depV;
   float  bubble_volts, Emin;
   float  rho_z_spe[1024];
   double **dr[2], **dz[2];

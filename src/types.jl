@@ -130,6 +130,7 @@ mutable struct SigGenSetup
     point_type::Ptr{Ptr{Cchar}}
     undepleted::Ptr{Ptr{Cchar}}
     fully_depleted::Cint
+    depV::Cdouble
     bubble_volts::Cfloat
     Emin::Cfloat
     rho_z_spe::NTuple{1024,Cfloat}
