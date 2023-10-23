@@ -26,6 +26,7 @@ static cyl_pt efield(cyl_pt pt, cyl_int_pt ipt, MJD_Siggen_Setup *setup);
 static int setup_efield(MJD_Siggen_Setup *setup);
 static int setup_wp(MJD_Siggen_Setup *setup);
 static int setup_C(MJD_Siggen_Setup *setup);
+static int setup_depletion(MJD_Siggen_Setup *setup);
 static int setup_velo(MJD_Siggen_Setup *setup);
 static int efield_exists(cyl_pt pt, MJD_Siggen_Setup *setup);
 
@@ -72,6 +73,12 @@ if (setup_velo(setup) != 0){
 
   if (setup_C(setup) != 0){
     error("Failed to read capacitance, config file: %s\n",
+	  setup->config_file_name);
+    return -1;
+  }
+
+  if (setup_depletion(setup) != 0){
+    error("Failed to read depletion voltage, config file: %s\n",
 	  setup->config_file_name);
     return -1;
   }
@@ -862,6 +869,42 @@ static int setup_C(MJD_Siggen_Setup *setup) {
   }
 
   setup->capacitance = capacitance;
+
+  return 0;
+}
+
+/*setup_depletion
+  read depletion voltage, minimum E field 
+  returns 0 on success*/
+static int setup_depletion(MJD_Siggen_Setup *setup) {
+  FILE  *fp;
+  char  line[256];
+
+  double depV;
+  float Emin, rmin, zmin;
+
+  char *wp_file_name = resolve_path_rel_to(setup->wp_name, setup->config_file_name);
+  if ((fp = fopen(wp_file_name, "r")) == NULL){
+    error("failed to open file: %s\n", wp_file_name);
+    return -1;
+  }
+  TELL_NORMAL("Reading depletion voltage from file: %s\n", setup->wp_name);
+  
+  // read depletion voltage, 
+  // minimum E field 
+  char keyword[] = "# Full depletion at";
+  char keyword2[] = "# Minimum bulk field =";
+  while (fgets(line, sizeof(line), fp)) {
+    if (strncmp(line, keyword, strlen(keyword)) == 0) {
+        sscanf( line, "# Full depletion at %lf V", &depV);
+    }
+    if (strncmp(line, keyword2, strlen(keyword2)) == 0) {
+        sscanf( line, "# Minimum bulk field = %f V/cm at (r,z) = (%f, %f) mm", &Emin, &rmin, &zmin);
+    }
+  }
+
+  setup->depV = depV;
+  setup->Emin = Emin;
 
   return 0;
 }
