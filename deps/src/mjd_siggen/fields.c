@@ -77,11 +77,11 @@ if (setup_velo(setup) != 0){
     return -1;
   }
 
-  if (setup_depletion(setup) != 0){
-    error("Failed to read depletion voltage, config file: %s\n",
-	  setup->config_file_name);
-    return -1;
-  }
+//  if (setup_depletion(setup) != 0){
+//    error("Failed to read depletion voltage, config file: %s\n",
+//	  setup->config_file_name);
+//    return -1;
+//  }
 
   return 0;
 }
