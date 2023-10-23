@@ -906,7 +906,7 @@ static int setup_depletion(MJD_Siggen_Setup *setup) {
 
   setup->depV = depV;
   setup->Emin = Emin;
-  //setup->rmin = rmin;
+  setup->rmin = rmin;
   //setup->zmin = zmin;
 
   return 0;
